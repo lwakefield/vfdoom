@@ -106,16 +106,20 @@ describe('Patcher', () => {
     const nodeD = nodeA.firstChild.nextSibling
 
     expect(patcher.mountPoint).to.eql(0)
+    expect(patcher.nodeB).to.eql(nodeA)
 
-    expect(patcher.next()).to.eql(nodeB)
+    expect(patcher.next()).to.be.ok
+    expect(patcher.nodeB).to.eql(nodeB)
     expect(patcher.mountPoint).to.eql(1)
 
-    expect(patcher.next()).to.eql(nodeC)
+    expect(patcher.next()).to.be.ok
+    expect(patcher.nodeB).to.eql(nodeC)
     expect(patcher.mountPoint).to.eql(2)
 
-    expect(patcher.next()).to.eql(nodeD)
+    expect(patcher.next()).to.be.ok
+    expect(patcher.nodeB).to.eql(nodeD)
     expect(patcher.mountPoint).to.eql(3)
 
-    expect(patcher.next()).to.be.undefined
+    expect(patcher.next()).to.not.be.ok
   })
 })

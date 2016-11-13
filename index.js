@@ -69,19 +69,20 @@ export class Patcher {
     this.nodeB = node
   }
   patch () {
-
   }
   next () {
-    // down
-    // right
-    // up and across
-    if (!this.nodeB) return undefined
+    let hasNextNode = false
+    if (this.nodeB.firstChild) {
+      hasNextNode = this._down()
+    } else if (this.nodeB.nextSibling) {
+      hasNextNode = this._across()
+    } else {
+      hasNextNode = this._upAndAcross()
+    }
 
-    this.mountPoint++
+    if (hasNextNode) this.mountPoint++
 
-    if (this.nodeB.firstChild) return this._down()
-    if (this.nodeB.nextSibling) return this._across()
-    return this._upAndAcross()
+    return hasNextNode
   }
   _down () {
     this.nodeB = this.nodeB.firstChild
