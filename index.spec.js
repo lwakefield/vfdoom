@@ -2,6 +2,8 @@
 import {expect} from 'chai'
 import {
   Node,
+  Vnode,
+  Vfnode,
   Patcher,
 } from './index.js'
 
@@ -55,6 +57,26 @@ describe('Node', () => {
     expect(nodeB.nextSibling).to.eql(nodeC)
     expect(nodeC.parent).to.eql(nodeA)
     expect(nodeC.prevSibling).to.eql(nodeB)
+  })
+})
+
+describe('Vnode', () => {
+  it('instatiates', () => {
+    const vnode = new Vnode('div')
+
+    expect(vnode).to.be.ok
+    expect(vnode.tagName).to.eql('div')
+  })
+})
+
+describe('Vfnode', () => {
+  const fn = () => {
+    return new Array(5).map(v => new Vnode('div') )
+  }
+  it ('instantiates', () => {
+    const vfnode = new Vfnode(fn)
+
+    expect(vfnode).to.be.ok
   })
 })
 

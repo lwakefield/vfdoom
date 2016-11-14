@@ -69,6 +69,20 @@ export class Patcher {
     this.nodeB = node
   }
   patch () {
+    let {nodeA, nodeB, component} = this
+
+    const mountKey = `${mountPoint}.${nodeB.key || 0}`
+
+    let mounted = component.mounted[mountKey]
+    if (mounted && nodeA !== mounted) {
+      component.recycle(nodeA)
+      nodeA = mounted
+    } if (!mounted) {
+      component.mounted[mountKey] = nodeA
+      mounted = nodeA
+    }
+
+    _patchAttrs(mounted, nodeB)
   }
   next () {
     let hasNextNode = false
