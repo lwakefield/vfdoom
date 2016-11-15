@@ -57,12 +57,31 @@ export class Vfnode extends Node {
     this.fn = fn
   }
   get children () {
-    return this.fn()
+    // We expect fn() to return an array of unconnected children
+    const children = this.fn()
+    const len = children.length
+    if (!len) return children
+
+    // Now we connect the children
+    const join = (nodeA, nodeB) => {
+      nodeA.nextSibling = nodeB
+      nodeB.prevSibling = nodeA
+    }
+
+    children[0].prevSibling = this.prevSibling
+    for (let i = 0; i < len - 1; i++) {
+      join(children[i], children[i+1])
+      children[i].parent = this.parent
+    }
+    children[len-1].nextSibling = this.nextSibling
+    children[len-1].parent = this.parent
+
+    return children
   }
+  set children (val) {}
 }
 
 export class Patcher {
-  mountPoint = 0
   constructor (node, component) {
     this.component = component
     this.nodeA = node
@@ -71,7 +90,7 @@ export class Patcher {
   patch () {
     let {nodeA, nodeB, component} = this
 
-    const mountKey = `${mountPoint}.${nodeB.key || 0}`
+    const mountKey = `${nodeB.mountPoint}.${nodeB.key || 0}`
 
     let mounted = component.mounted[mountKey]
     if (mounted && nodeA !== mounted) {
@@ -93,8 +112,6 @@ export class Patcher {
     } else {
       hasNextNode = this._upAndAcross()
     }
-
-    if (hasNextNode) this.mountPoint++
 
     return hasNextNode
   }

@@ -70,13 +70,56 @@ describe('Vnode', () => {
 })
 
 describe('Vfnode', () => {
-  const fn = () => {
-    return new Array(5).map(v => new Vnode('div') )
-  }
-  it ('instantiates', () => {
+  const fn = () => [
+    new Vnode(),
+    new Vnode(),
+    new Vnode(),
+  ]
+  it('instantiates', () => {
     const vfnode = new Vfnode(fn)
-
     expect(vfnode).to.be.ok
+  })
+  it('has children', () => {
+    const vfnode = new Vfnode(fn)
+    const children = vfnode.children
+    expect(children).to.be.ok
+    expect(children[0]).to.be.ok
+    expect(children[1]).to.be.ok
+    expect(children[2]).to.be.ok
+
+    expect(children[0].prevSibling).to.eql(null)
+    expect(children[0].nextSibling).to.eql(children[1])
+    expect(children[1].prevSibling).to.eql(children[0])
+    expect(children[1].nextSibling).to.eql(children[2])
+    expect(children[2].prevSibling).to.eql(children[1])
+    expect(children[2].nextSibling).to.eql(null)
+  })
+  it('inherits from parents and siblings', () => {
+    const root = new Vnode()
+    const vfnode = new Vfnode(fn)
+    const left = new Vnode()
+    const right = new Vnode()
+
+    root.addChild(left)
+    root.addChild(vfnode)
+    root.addChild(right)
+
+    const children = vfnode.children
+    expect(children).to.be.ok
+    expect(children[0]).to.be.ok
+    expect(children[1]).to.be.ok
+    expect(children[2]).to.be.ok
+
+    expect(children[0].parent).to.eql(root)
+    expect(children[1].parent).to.eql(root)
+    expect(children[2].parent).to.eql(root)
+
+    expect(children[0].prevSibling).to.eql(left)
+    expect(children[0].nextSibling).to.eql(children[1])
+    expect(children[1].prevSibling).to.eql(children[0])
+    expect(children[1].nextSibling).to.eql(children[2])
+    expect(children[2].prevSibling).to.eql(children[1])
+    expect(children[2].nextSibling).to.eql(right)
   })
 })
 
@@ -127,20 +170,16 @@ describe('Patcher', () => {
     const nodeC = nodeB.firstChild
     const nodeD = nodeA.firstChild.nextSibling
 
-    expect(patcher.mountPoint).to.eql(0)
     expect(patcher.nodeB).to.eql(nodeA)
 
     expect(patcher.next()).to.be.ok
     expect(patcher.nodeB).to.eql(nodeB)
-    expect(patcher.mountPoint).to.eql(1)
 
     expect(patcher.next()).to.be.ok
     expect(patcher.nodeB).to.eql(nodeC)
-    expect(patcher.mountPoint).to.eql(2)
 
     expect(patcher.next()).to.be.ok
     expect(patcher.nodeB).to.eql(nodeD)
-    expect(patcher.mountPoint).to.eql(3)
 
     expect(patcher.next()).to.not.be.ok
   })
