@@ -1,9 +1,12 @@
 /* eslint-env mocha */
 import {expect} from 'chai'
+import jsdom from 'jsdom'
+
 import {
   Node,
   Vnode,
   Vfnode,
+  Component,
   Patcher,
 } from './index.js'
 
@@ -26,8 +29,24 @@ function treeFromStr (str) {
     leftNode.addChild(rightNode)
   }
   for (const node of nodes.values()) {
-    if (!node.parent) return node
+    if (!node.parentNode) return node
   }
+}
+
+function makeVnodes (tagName, amount) {
+  const nodes = []
+  for (let i = 0; i < amount; i++) {
+    nodes.push(new Vnode(tagName))
+  }
+  return nodes
+}
+
+function normalizeHTML (html) {
+  return html
+  .split('\n')
+  .map(v => v.trim())
+  .filter(v => !!v)
+  .join('')
 }
 
 describe('Node', () => {
@@ -38,7 +57,7 @@ describe('Node', () => {
 
     expect(nodeA.firstChild).to.eql(nodeB)
     expect(nodeA.children[0]).to.eql(nodeB)
-    expect(nodeB.parent).to.eql(nodeA)
+    expect(nodeB.parentNode).to.eql(nodeA)
   })
 
   it('adds two children', () => {
@@ -50,12 +69,12 @@ describe('Node', () => {
 
     expect(nodeA.firstChild).to.eql(nodeB)
     expect(nodeA.children[0]).to.eql(nodeB)
-    expect(nodeB.parent).to.eql(nodeA)
+    expect(nodeB.parentNode).to.eql(nodeA)
 
     expect(nodeA.firstChild.nextSibling).to.eql(nodeC)
     expect(nodeA.children[1]).to.eql(nodeC)
     expect(nodeB.nextSibling).to.eql(nodeC)
-    expect(nodeC.parent).to.eql(nodeA)
+    expect(nodeC.parentNode).to.eql(nodeA)
     expect(nodeC.prevSibling).to.eql(nodeB)
   })
 })
@@ -110,9 +129,9 @@ describe('Vfnode', () => {
     expect(children[1]).to.be.ok
     expect(children[2]).to.be.ok
 
-    expect(children[0].parent).to.eql(root)
-    expect(children[1].parent).to.eql(root)
-    expect(children[2].parent).to.eql(root)
+    expect(children[0].parentNode).to.eql(root)
+    expect(children[1].parentNode).to.eql(root)
+    expect(children[2].parentNode).to.eql(root)
 
     expect(children[0].prevSibling).to.eql(left)
     expect(children[0].nextSibling).to.eql(children[1])
@@ -137,34 +156,42 @@ describe('treeFromStr', () => {
     const nodeB = nodeA.firstChild
     expect(nodeB).to.be.ok
     expect(nodeB).to.be.instanceof(Node)
-    expect(nodeB.parent).to.eql(nodeA)
+    expect(nodeB.parentNode).to.eql(nodeA)
 
     const nodeC = nodeB.firstChild
     expect(nodeC).to.be.ok
     expect(nodeC).to.be.instanceof(Node)
-    expect(nodeC.parent).to.eql(nodeB)
+    expect(nodeC.parentNode).to.eql(nodeB)
 
     const nodeD = nodeA.children[1]
     expect(nodeD).to.be.ok
     expect(nodeD).to.be.instanceof(Node)
-    expect(nodeD.parent).to.eql(nodeA)
+    expect(nodeD.parentNode).to.eql(nodeA)
     expect(nodeB.nextSibling).to.eql(nodeD)
     expect(nodeD.prevSibling).to.eql(nodeB)
   })
 })
 
 describe('Patcher', () => {
-  //     A
-  //    / \
-  //   B   D
-  //  /
-  // C
-  const nodeA = treeFromStr(`
-    A - B
-    A - D
-    B - C
-  `)
+  let window
+  let document
+  beforeEach(() => {
+    window = jsdom.jsdom().defaultView
+    document = window.document
+    global['window'] = window
+    global['document'] = document
+  })
   it('iterates correctly', () => {
+    //     A
+    //    / \
+    //   B   D
+    //  /
+    // C
+    const nodeA = treeFromStr(`
+      A - B
+      A - D
+      B - C
+    `)
     const patcher = new Patcher(nodeA, nodeA)
     const nodeB = nodeA.firstChild
     const nodeC = nodeB.firstChild
@@ -182,5 +209,73 @@ describe('Patcher', () => {
     expect(patcher.nodeB).to.eql(nodeD)
 
     expect(patcher.next()).to.not.be.ok
+  })
+  it('patches from scratch', () => {
+    //     A
+    //    / \
+    //   B   E
+    //  / \
+    // C   D
+    const nodeA = new Component('app')
+    const [
+      nodeB,
+      nodeC,
+      nodeD,
+      nodeE,
+    ] = makeVnodes('div', 5)
+    nodeA.mountPoint = 0
+    nodeB.mountPoint = 1
+    nodeC.mountPoint = 2
+    nodeD.mountPoint = 3
+    nodeE.mountPoint = 4
+    nodeA.addChild(nodeB)
+    nodeB.addChild(nodeC)
+    nodeB.addChild(nodeD)
+    nodeA.addChild(nodeE)
+
+    const domNodeA = document.createElement('div')
+    const patcher = new Patcher(domNodeA, nodeA)
+
+    expect(patcher).to.be.ok
+    expect(patcher.nodeA).to.eql(domNodeA)
+    expect(patcher.nodeB).to.eql(nodeA)
+
+    patcher.next()
+    expect(patcher.nodeB).to.eql(nodeB)
+    // Check that it creates nodes as we go along
+    const domNodeB = patcher.nodeA
+    expect(domNodeB.parentNode).to.eql(domNodeA)
+    expect(domNodeA.firstChild).to.eql(domNodeB)
+
+    patcher.next()
+    expect(patcher.nodeB).to.eql(nodeC)
+    const domNodeC = patcher.nodeA
+    expect(domNodeC.parentNode).to.eql(domNodeB)
+    expect(domNodeB.firstChild).to.eql(domNodeC)
+
+    patcher.next()
+    expect(patcher.nodeB).to.eql(nodeD)
+    const domNodeD = patcher.nodeA
+    expect(domNodeD.parentNode).to.eql(domNodeB)
+    expect(domNodeC.nextSibling).to.eql(domNodeD)
+
+    patcher.next()
+    expect(patcher.nodeB).to.eql(nodeE)
+    const domNodeE = patcher.nodeA
+    expect(domNodeE.parentNode).to.eql(domNodeA)
+    expect(domNodeB.nextSibling).to.eql(domNodeE)
+
+    expect(domNodeA.outerHTML).to.eql(
+    normalizeHTML(
+    `
+      <div>
+        <div>
+          <div></div>
+          <div></div>
+        </div>
+        <div></div>
+      </div>
+    `
+    ))
   })
 })

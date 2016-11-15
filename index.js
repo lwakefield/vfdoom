@@ -3,13 +3,13 @@ const newEl = (tagName) => document.createElement(tagName)
 
 export class Node {
   children = []
-  parent = null
+  parentNode = null
   prevSibling = null
   nextSibling = null
 
   addChild (child) {
     this.children.push(child)
-    child.parent = this
+    child.parentNode = this
 
     const len = this.children.length
     if (len < 2) return
@@ -26,6 +26,13 @@ export class Node {
 }
 
 export class Component extends Node {
+  /**
+   * A Component is a node, which is responsible for managing Vnodes, Vfnodes
+   * and Components
+   * Every nested child of a Component *must* have a mount point.
+   * The management of the mount point is deferred to elsewhere, ie. not managed
+   * by the Component
+   */
   attributes = []
   mounted = new Map()
   recycled = {}
@@ -34,12 +41,9 @@ export class Component extends Node {
     this.componentName = componentName
     this.tagName = tagName
   }
-  recycle (node) {
-    const mountKey = node._mountKey
-    if (mountKey) {
-      mounted[mountKey] = node
-    }
-    node.parent.removeChild(node)
+  recycle (node, mountKey) {
+    mounted.set(mountKey, node)
+    node.parentNode.removeChild(node)
   }
 }
 
@@ -71,10 +75,10 @@ export class Vfnode extends Node {
     children[0].prevSibling = this.prevSibling
     for (let i = 0; i < len - 1; i++) {
       join(children[i], children[i+1])
-      children[i].parent = this.parent
+      children[i].parentNode = this.parentNode
     }
     children[len-1].nextSibling = this.nextSibling
-    children[len-1].parent = this.parent
+    children[len-1].parentNode = this.parentNode
 
     return children
   }
@@ -85,19 +89,19 @@ export class Patcher {
   constructor (node, component) {
     this.component = component
     this.nodeA = node
-    this.nodeB = node
+    this.nodeB = component
   }
   patch () {
     let {nodeA, nodeB, component} = this
 
     const mountKey = `${nodeB.mountPoint}.${nodeB.key || 0}`
 
-    let mounted = component.mounted[mountKey]
+    let mounted = component.mounted.get(mountKey)
     if (mounted && nodeA !== mounted) {
-      component.recycle(nodeA)
+      component.recycle(nodeA, mountKey)
       nodeA = mounted
     } if (!mounted) {
-      component.mounted[mountKey] = nodeA
+      component.mounted.set(mountKey, nodeA)
       mounted = nodeA
     }
 
@@ -116,34 +120,38 @@ export class Patcher {
     return hasNextNode
   }
   _down () {
+    if (!this.nodeB.firstChild) return false
+
     this.nodeB = this.nodeB.firstChild
     if (!this.nodeA.firstChild) {
       this.nodeA.appendChild(newEl(this.nodeB.tagName))
     }
     this.nodeA = this.nodeA.firstChild
-    return this.nodeB
+    return true
   }
   _across () {
+    if (!this.nodeB.nextSibling) return false
+
     this.nodeB = this.nodeB.nextSibling
     if (!this.nodeB.nextSibling) {
-      this.nodeA.parent.appendChild(newEl(this.nodeB.tagName))
+      this.nodeA.parentNode.appendChild(newEl(this.nodeB.tagName))
     }
     this.nodeA = this.nodeA.nextSibling
-    return this.nodeB
+    return true
   }
   _upAndAcross () {
-    if (!this.nodeB.parent.nextSibling) return undefined
+    while (!this.nodeB.nextSibling && this.nodeB.parentNode) {
+      this.nodeB = this.nodeB.parentNode
+      this.nodeA = this.nodeA.parentNode
+    }
+    if (!this.nodeB.parentNode) return false
 
-    while (!this.nodeB.parent.nextSibling) {
-      this.nodeB = this.nodeB.parent
-      this.nodeA = this.nodeA.parent
+    this.nodeB = this.nodeB.nextSibling
+    if (!this.nodeA.nextSibling) {
+      this.nodeA.parentNode.appendChild(newEl(this.nodeB.tagName))
     }
-    this.nodeB = this.nodeB.parent.nextSibling
-    if (!this.nodeA.parent.nextSibling) {
-      this.nodeA.parent.parent.appendChild(newEl(this.nodeB.tagName))
-    }
-    this.nodeA = this.nodeA.parent.nextSibling
-    return this.nodeB
+    this.nodeA = this.nodeA.nextSibling
+    return true
   }
 }
 
@@ -184,7 +192,7 @@ function patch(node, component) {
       // There is a next round and we dont have a real DOM node ready...
       if (childB && !childA.nextSibling) {
         const emptyNode = document.createChild(childB.tagName)
-        childA.parent.appendChild(emptyNode)
+        childA.parentNode.appendChild(emptyNode)
       }
       childA = childA.nextSibling
     }
