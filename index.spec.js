@@ -184,18 +184,21 @@ describe('Patcher', () => {
   it('iterates correctly', () => {
     //     A
     //    / \
-    //   B   D
-    //  /
-    // C
+    //   B   E
+    //  / \
+    // C   D
     const nodeA = treeFromStr(`
       A - B
-      A - D
       B - C
+      B - D
+      A - E
     `)
-    const patcher = new Patcher(nodeA, nodeA)
     const nodeB = nodeA.firstChild
     const nodeC = nodeB.firstChild
-    const nodeD = nodeA.firstChild.nextSibling
+    const nodeD = nodeC.nextSibling
+    const nodeE = nodeB.nextSibling
+
+    const patcher = new Patcher(nodeA, nodeA)
 
     expect(patcher.nodeB).to.eql(nodeA)
 
@@ -207,6 +210,9 @@ describe('Patcher', () => {
 
     expect(patcher.next()).to.be.ok
     expect(patcher.nodeB).to.eql(nodeD)
+
+    expect(patcher.next()).to.be.ok
+    expect(patcher.nodeB).to.eql(nodeE)
 
     expect(patcher.next()).to.not.be.ok
   })
@@ -240,30 +246,32 @@ describe('Patcher', () => {
     expect(patcher.nodeA).to.eql(domNodeA)
     expect(patcher.nodeB).to.eql(nodeA)
 
-    patcher.next()
+    expect(patcher.next()).to.be.ok
     expect(patcher.nodeB).to.eql(nodeB)
     // Check that it creates nodes as we go along
     const domNodeB = patcher.nodeA
     expect(domNodeB.parentNode).to.eql(domNodeA)
     expect(domNodeA.firstChild).to.eql(domNodeB)
 
-    patcher.next()
+    expect(patcher.next()).to.be.ok
     expect(patcher.nodeB).to.eql(nodeC)
     const domNodeC = patcher.nodeA
     expect(domNodeC.parentNode).to.eql(domNodeB)
     expect(domNodeB.firstChild).to.eql(domNodeC)
 
-    patcher.next()
+    expect(patcher.next()).to.be.ok
     expect(patcher.nodeB).to.eql(nodeD)
     const domNodeD = patcher.nodeA
     expect(domNodeD.parentNode).to.eql(domNodeB)
     expect(domNodeC.nextSibling).to.eql(domNodeD)
 
-    patcher.next()
+    expect(patcher.next()).to.be.ok
     expect(patcher.nodeB).to.eql(nodeE)
     const domNodeE = patcher.nodeA
     expect(domNodeE.parentNode).to.eql(domNodeA)
     expect(domNodeB.nextSibling).to.eql(domNodeE)
+
+    expect(patcher.next()).to.not.be.ok
 
     expect(domNodeA.outerHTML).to.eql(
     normalizeHTML(

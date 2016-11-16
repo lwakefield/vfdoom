@@ -133,7 +133,7 @@ export class Patcher {
     if (!this.nodeB.nextSibling) return false
 
     this.nodeB = this.nodeB.nextSibling
-    if (!this.nodeB.nextSibling) {
+    if (!this.nodeA.nextSibling) {
       this.nodeA.parentNode.appendChild(newEl(this.nodeB.tagName))
     }
     this.nodeA = this.nodeA.nextSibling
