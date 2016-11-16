@@ -181,109 +181,178 @@ describe('Patcher', () => {
     global['window'] = window
     global['document'] = document
   })
-  it('iterates correctly', () => {
-    //     A
-    //    / \
-    //   B   E
-    //  / \
-    // C   D
-    const nodeA = treeFromStr(`
-      A - B
-      B - C
-      B - D
-      A - E
-    `)
-    const nodeB = nodeA.firstChild
-    const nodeC = nodeB.firstChild
-    const nodeD = nodeC.nextSibling
-    const nodeE = nodeB.nextSibling
+  describe('next()', () => {
+    it('iterates correctly', () => {
+      //     A
+      //    / \
+      //   B   E
+      //  / \
+      // C   D
+      const nodeA = treeFromStr(`
+        A - B
+        B - C
+        B - D
+        A - E
+      `)
+      const nodeB = nodeA.firstChild
+      const nodeC = nodeB.firstChild
+      const nodeD = nodeC.nextSibling
+      const nodeE = nodeB.nextSibling
 
-    const patcher = new Patcher(nodeA, nodeA)
+      const patcher = new Patcher(nodeA, nodeA)
 
-    expect(patcher.nodeB).to.eql(nodeA)
+      expect(patcher.nodeB).to.eql(nodeA)
 
-    expect(patcher.next()).to.be.ok
-    expect(patcher.nodeB).to.eql(nodeB)
+      expect(patcher.next()).to.be.ok
+      expect(patcher.nodeB).to.eql(nodeB)
 
-    expect(patcher.next()).to.be.ok
-    expect(patcher.nodeB).to.eql(nodeC)
+      expect(patcher.next()).to.be.ok
+      expect(patcher.nodeB).to.eql(nodeC)
 
-    expect(patcher.next()).to.be.ok
-    expect(patcher.nodeB).to.eql(nodeD)
+      expect(patcher.next()).to.be.ok
+      expect(patcher.nodeB).to.eql(nodeD)
 
-    expect(patcher.next()).to.be.ok
-    expect(patcher.nodeB).to.eql(nodeE)
+      expect(patcher.next()).to.be.ok
+      expect(patcher.nodeB).to.eql(nodeE)
 
-    expect(patcher.next()).to.not.be.ok
-  })
-  it('patches from scratch', () => {
-    //     A
-    //    / \
-    //   B   E
-    //  / \
-    // C   D
-    const nodeA = new Component('app')
-    const [
-      nodeB,
-      nodeC,
-      nodeD,
-      nodeE,
-    ] = makeVnodes('div', 5)
-    nodeA.mountPoint = 0
-    nodeB.mountPoint = 1
-    nodeC.mountPoint = 2
-    nodeD.mountPoint = 3
-    nodeE.mountPoint = 4
-    nodeA.addChild(nodeB)
-    nodeB.addChild(nodeC)
-    nodeB.addChild(nodeD)
-    nodeA.addChild(nodeE)
+      expect(patcher.next()).to.not.be.ok
+    })
+    it('patches from scratch', () => {
+      //     A
+      //    / \
+      //   B   E
+      //  / \
+      // C   D
+      const nodeA = new Component('app')
+      const [
+        nodeB,
+        nodeC,
+        nodeD,
+        nodeE,
+      ] = makeVnodes('div', 5)
+      nodeA.mountPoint = 0
+      nodeB.mountPoint = 1
+      nodeC.mountPoint = 2
+      nodeD.mountPoint = 3
+      nodeE.mountPoint = 4
+      nodeA.addChild(nodeB)
+      nodeB.addChild(nodeC)
+      nodeB.addChild(nodeD)
+      nodeA.addChild(nodeE)
 
-    const domNodeA = document.createElement('div')
-    const patcher = new Patcher(domNodeA, nodeA)
+      const domNodeA = document.createElement('div')
+      const patcher = new Patcher(domNodeA, nodeA)
 
-    expect(patcher).to.be.ok
-    expect(patcher.nodeA).to.eql(domNodeA)
-    expect(patcher.nodeB).to.eql(nodeA)
+      expect(patcher).to.be.ok
+      expect(patcher.nodeA).to.eql(domNodeA)
+      expect(patcher.nodeB).to.eql(nodeA)
 
-    expect(patcher.next()).to.be.ok
-    expect(patcher.nodeB).to.eql(nodeB)
-    // Check that it creates nodes as we go along
-    const domNodeB = patcher.nodeA
-    expect(domNodeB.parentNode).to.eql(domNodeA)
-    expect(domNodeA.firstChild).to.eql(domNodeB)
+      expect(patcher.next()).to.be.ok
+      expect(patcher.nodeB).to.eql(nodeB)
+      // Check that it creates nodes as we go along
+      const domNodeB = patcher.nodeA
+      expect(domNodeB.parentNode).to.eql(domNodeA)
+      expect(domNodeA.firstChild).to.eql(domNodeB)
 
-    expect(patcher.next()).to.be.ok
-    expect(patcher.nodeB).to.eql(nodeC)
-    const domNodeC = patcher.nodeA
-    expect(domNodeC.parentNode).to.eql(domNodeB)
-    expect(domNodeB.firstChild).to.eql(domNodeC)
+      expect(patcher.next()).to.be.ok
+      expect(patcher.nodeB).to.eql(nodeC)
+      const domNodeC = patcher.nodeA
+      expect(domNodeC.parentNode).to.eql(domNodeB)
+      expect(domNodeB.firstChild).to.eql(domNodeC)
 
-    expect(patcher.next()).to.be.ok
-    expect(patcher.nodeB).to.eql(nodeD)
-    const domNodeD = patcher.nodeA
-    expect(domNodeD.parentNode).to.eql(domNodeB)
-    expect(domNodeC.nextSibling).to.eql(domNodeD)
+      expect(patcher.next()).to.be.ok
+      expect(patcher.nodeB).to.eql(nodeD)
+      const domNodeD = patcher.nodeA
+      expect(domNodeD.parentNode).to.eql(domNodeB)
+      expect(domNodeC.nextSibling).to.eql(domNodeD)
 
-    expect(patcher.next()).to.be.ok
-    expect(patcher.nodeB).to.eql(nodeE)
-    const domNodeE = patcher.nodeA
-    expect(domNodeE.parentNode).to.eql(domNodeA)
-    expect(domNodeB.nextSibling).to.eql(domNodeE)
+      expect(patcher.next()).to.be.ok
+      expect(patcher.nodeB).to.eql(nodeE)
+      const domNodeE = patcher.nodeA
+      expect(domNodeE.parentNode).to.eql(domNodeA)
+      expect(domNodeB.nextSibling).to.eql(domNodeE)
 
-    expect(patcher.next()).to.not.be.ok
+      expect(patcher.next()).to.not.be.ok
 
-    expect(domNodeA.outerHTML).to.eql(
-    normalizeHTML(
-    `
-      <div>
+      expect(domNodeA.outerHTML).to.eql(
+      normalizeHTML(
+      `
         <div>
-          <div></div>
+          <div>
+            <div></div>
+            <div></div>
+          </div>
           <div></div>
         </div>
-        <div></div>
-      </div>
-    `
-    ))
+      `
+      ))
+    })
+  })
+  describe('patch()', () => {
+    it('patches correctly', () => {
+      //     A
+      //    / \
+      //   B   E
+      //  / \
+      // C   D
+      const nodeA = new Component('app')
+      const [
+        nodeB,
+        nodeC,
+        nodeD,
+        nodeE,
+      ] = makeVnodes('div', 5)
+      nodeA.mountPoint = 0
+      nodeB.mountPoint = 1
+      nodeC.mountPoint = 2
+      nodeD.mountPoint = 3
+      nodeE.mountPoint = 4
+      nodeA.addChild(nodeB)
+      nodeB.addChild(nodeC)
+      nodeB.addChild(nodeD)
+      nodeA.addChild(nodeE)
+
+      const domNodeA = document.createElement('div')
+      const patcher = new Patcher(domNodeA, nodeA)
+
+      // Patch once!
+      while (patcher.patch() && patcher.next());
+
+      const domNodeB = domNodeA.firstChild
+      const domNodeC = domNodeB.firstChild
+      const domNodeD = domNodeC.nextSibling
+      const domNodeE = domNodeB.nextSibling
+
+      const mounted = nodeA.mounted
+      expect(mounted.get('0.0')).to.eql(domNodeA)
+      expect(mounted.get('1.0')).to.eql(domNodeB)
+      expect(mounted.get('2.0')).to.eql(domNodeC)
+      expect(mounted.get('3.0')).to.eql(domNodeD)
+      expect(mounted.get('4.0')).to.eql(domNodeE)
+
+      // Patch again!
+      // We shouldn't see any changes..
+      patcher.reset()
+      expect(patcher.nodeA).to.eql(domNodeA)
+      expect(patcher.nodeB).to.eql(nodeA)
+
+      while (patcher.patch() && patcher.next());
+      expect(mounted.get('0.0')).to.eql(domNodeA)
+      expect(mounted.get('1.0')).to.eql(domNodeB)
+      expect(mounted.get('2.0')).to.eql(domNodeC)
+      expect(mounted.get('3.0')).to.eql(domNodeD)
+      expect(mounted.get('4.0')).to.eql(domNodeE)
+
+      // Let's interfere, then patch again!
+      patcher.reset()
+      domNodeA.innerHTML = ''
+
+      while (patcher.patch() && patcher.next());
+      expect(mounted.get('0.0')).to.eql(domNodeA)
+      expect(mounted.get('1.0')).to.eql(domNodeB)
+      expect(mounted.get('2.0')).to.eql(domNodeC)
+      expect(mounted.get('3.0')).to.eql(domNodeD)
+      expect(mounted.get('4.0')).to.eql(domNodeE)
+    })
   })
 })

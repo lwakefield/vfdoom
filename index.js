@@ -41,8 +41,8 @@ export class Component extends Node {
     this.componentName = componentName
     this.tagName = tagName
   }
-  recycle (node, mountKey) {
-    mounted.set(mountKey, node)
+  recycle (node) {
+    if (!node.parentNode) return
     node.parentNode.removeChild(node)
   }
 }
@@ -52,6 +52,19 @@ export class Vnode extends Node {
   constructor (tagName) {
     super()
     this.tagName = tagName
+  }
+}
+
+export class Tnode extends Node {
+  constructor (text) {
+    super()
+    this.text = text
+  }
+  get children () {
+    throw new Error('Text node cannot have children')
+  }
+  set children (val) {
+    throw new Error('Text node cannot have children')
   }
 }
 
@@ -88,8 +101,14 @@ export class Vfnode extends Node {
 export class Patcher {
   constructor (node, component) {
     this.component = component
+    this.startNodeA = node
+    this.startNodeB = component
     this.nodeA = node
     this.nodeB = component
+  }
+  reset () {
+    this.nodeA = this.startNodeA
+    this.nodeB = this.startNodeB
   }
   patch () {
     let {nodeA, nodeB, component} = this
@@ -98,14 +117,15 @@ export class Patcher {
 
     let mounted = component.mounted.get(mountKey)
     if (mounted && nodeA !== mounted) {
-      component.recycle(nodeA, mountKey)
+      component.recycle(nodeA)
       nodeA = mounted
-    } if (!mounted) {
+    } else if (!mounted) {
       component.mounted.set(mountKey, nodeA)
       mounted = nodeA
     }
 
-    _patchAttrs(mounted, nodeB)
+    // _patchAttrs(mounted, nodeB)
+    return true
   }
   next () {
     let hasNextNode = false
@@ -124,7 +144,7 @@ export class Patcher {
 
     this.nodeB = this.nodeB.firstChild
     if (!this.nodeA.firstChild) {
-      this.nodeA.appendChild(newEl(this.nodeB.tagName))
+      this.nodeA.appendChild(this._createDomNode(this.nodeB))
     }
     this.nodeA = this.nodeA.firstChild
     return true
@@ -134,7 +154,7 @@ export class Patcher {
 
     this.nodeB = this.nodeB.nextSibling
     if (!this.nodeA.nextSibling) {
-      this.nodeA.parentNode.appendChild(newEl(this.nodeB.tagName))
+      this.nodeA.parentNode.appendChild(this._createDomNode(this.nodeB))
     }
     this.nodeA = this.nodeA.nextSibling
     return true
@@ -148,10 +168,15 @@ export class Patcher {
 
     this.nodeB = this.nodeB.nextSibling
     if (!this.nodeA.nextSibling) {
-      this.nodeA.parentNode.appendChild(newEl(this.nodeB.tagName))
+      this.nodeA.parentNode.appendChild(this._createDomNode(this.nodeB))
     }
     this.nodeA = this.nodeA.nextSibling
     return true
+  }
+  _createDomNode (node) {
+    const mountKey = `${node.mountPoint}.${node.key || 0}`
+    let mounted = this.component.mounted.get(mountKey)
+    return mounted || newEl(node.tagName)
   }
 }
 
