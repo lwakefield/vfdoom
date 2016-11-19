@@ -354,5 +354,101 @@ describe('Patcher', () => {
       expect(mounted.get('3.0')).to.eql(domNodeD)
       expect(mounted.get('4.0')).to.eql(domNodeE)
     })
+    it('patches correctly if there are type mismatches', () => {
+      //     A
+      //    / \
+      //   B   E
+      //  / \
+      // C   D
+      const nodeA = new Component('app')
+      const [
+        nodeB,
+        nodeC,
+        nodeD,
+        nodeE,
+      ] = makeVnodes('div', 5)
+      nodeA.mountPoint = 0
+      nodeB.mountPoint = 1
+      nodeC.mountPoint = 2
+      nodeD.mountPoint = 3
+      nodeE.mountPoint = 4
+      nodeA.addChild(nodeB)
+      nodeB.addChild(nodeC)
+      nodeB.addChild(nodeD)
+      nodeA.addChild(nodeE)
+
+      const domNodeA = document.createElement('p')
+      domNodeA.outerHTML = `
+      <p>
+          <p>
+            <p></p>
+            <p></p>
+          </p>
+          <p></p>
+        </p>
+      `
+      const patcher = new Patcher(domNodeA, nodeA)
+
+      // Patch once!
+      while (patcher.patch() && patcher.next());
+
+      const domNodeB = domNodeA.firstChild
+      const domNodeC = domNodeB.firstChild
+      const domNodeD = domNodeC.nextSibling
+      const domNodeE = domNodeB.nextSibling
+
+      const mounted = nodeA.mounted
+      expect(mounted.get('0.0')).to.eql(domNodeA)
+      expect(mounted.get('1.0')).to.eql(domNodeB)
+      expect(mounted.get('2.0')).to.eql(domNodeC)
+      expect(mounted.get('3.0')).to.eql(domNodeD)
+      expect(mounted.get('4.0')).to.eql(domNodeE)
+    })
+  })
+  describe('_patchAttrs', () => {
+    it('patches from scratch', () => {
+      const vnode = new Vnode('div')
+      vnode.attributes = [
+        {name: 'id', value: 'foo'},
+        {name: 'class', value: 'one two three'},
+      ]
+      const dnode = document.createElement('div')
+      const patcher = new Patcher()
+
+      patcher._patchAttrs(dnode, vnode)
+      const html = dnode.outerHTML
+      expect(html).to.eql('<div id="foo" class="one two three"></div>')
+    })
+    it('overrides existing attrs', () => {
+      const vnode = new Vnode('div')
+      vnode.attributes = [
+        {name: 'id', value: 'foo'},
+        {name: 'class', value: 'one two three'},
+      ]
+      const dnode = document.createElement('div')
+      dnode.setAttribute('id', 'bar')
+      dnode.setAttribute('class', 'four five six')
+      const patcher = new Patcher()
+
+      patcher._patchAttrs(dnode, vnode)
+      const html = dnode.outerHTML
+      expect(html).to.eql('<div id="foo" class="one two three"></div>')
+    })
+    it('removes old attrs', () => {
+      const vnode = new Vnode('div')
+      vnode.attributes = [
+        {name: 'id', value: 'foo'},
+        {name: 'class', value: 'one two three'},
+      ]
+      const dnode = document.createElement('div')
+      dnode.setAttribute('id', 'bar')
+      dnode.setAttribute('class', 'four five six')
+      dnode.setAttribute('style', 'border: 1px red;')
+      const patcher = new Patcher()
+
+      patcher._patchAttrs(dnode, vnode)
+      const html = dnode.outerHTML
+      expect(html).to.eql('<div id="foo" class="one two three"></div>')
+    })
   })
 })

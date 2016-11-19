@@ -1,5 +1,10 @@
 const noop = () => {}
 const newEl = (tagName) => document.createElement(tagName)
+const nodeTypeMismatch = (a, b) => {
+  if (!a || !b) return false
+  if (!a.tagName || !b.tagName) return false
+  return a.tagName.toLowerCase() !== b.tagName.toLowerCase()
+}
 
 export class Node {
   children = []
@@ -124,7 +129,7 @@ export class Patcher {
       mounted = nodeA
     }
 
-    // _patchAttrs(mounted, nodeB)
+    this._patchAttrs(mounted, nodeB)
     return true
   }
   next () {
@@ -139,11 +144,27 @@ export class Patcher {
 
     return hasNextNode
   }
+  _patchAttrs (dnode, vnode) {
+    const dnodeAttrs = new Map()
+    for (const attr of Array.from(dnode.attributes)) {
+      dnodeAttrs.set(attr.name, true)
+    }
+    const vnodeAttrs = vnode.attributes || []
+    for (const attr of vnodeAttrs) {
+      dnode.setAttribute(attr.name, attr.value)
+      dnodeAttrs.delete(attr.name)
+    }
+    for (const key of dnodeAttrs.keys()) {
+      dnode.removeAttribute(key)
+    }
+  }
   _down () {
     if (!this.nodeB.firstChild) return false
 
     this.nodeB = this.nodeB.firstChild
-    if (!this.nodeA.firstChild) {
+    const nextNodeA = this.nodeA.firstChild
+    const mismatch = nodeTypeMismatch(nextNodeA, this.nodeB)
+    if (!nextNodeA || mismatch) {
       this.nodeA.appendChild(this._createDomNode(this.nodeB))
     }
     this.nodeA = this.nodeA.firstChild
@@ -153,7 +174,9 @@ export class Patcher {
     if (!this.nodeB.nextSibling) return false
 
     this.nodeB = this.nodeB.nextSibling
-    if (!this.nodeA.nextSibling) {
+    const nextNodeA = this.nodeA.nextSibling
+    const mismatch = nodeTypeMismatch(nextNodeA, this.nodeB)
+    if (!nextNodeA || mismatch) {
       this.nodeA.parentNode.appendChild(this._createDomNode(this.nodeB))
     }
     this.nodeA = this.nodeA.nextSibling
@@ -167,7 +190,9 @@ export class Patcher {
     if (!this.nodeB.parentNode) return false
 
     this.nodeB = this.nodeB.nextSibling
-    if (!this.nodeA.nextSibling) {
+    const nextNodeA = this.nodeA.nextSibling
+    const mismatch = nodeTypeMismatch(nextNodeA, this.nodeB)
+    if (!nextNodeA || mismatch) {
       this.nodeA.parentNode.appendChild(this._createDomNode(this.nodeB))
     }
     this.nodeA = this.nodeA.nextSibling
