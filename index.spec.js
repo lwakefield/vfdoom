@@ -5,6 +5,7 @@ import jsdom from 'jsdom'
 import {
   Node,
   Vnode,
+  Tnode,
   Vfnode,
   Component,
   Patcher,
@@ -180,6 +181,7 @@ describe('Patcher', () => {
     document = window.document
     global['window'] = window
     global['document'] = document
+    global['Text'] = window.Text
   })
   describe('next()', () => {
     it('iterates correctly', () => {
@@ -403,6 +405,35 @@ describe('Patcher', () => {
       expect(mounted.get('2.0')).to.eql(domNodeC)
       expect(mounted.get('3.0')).to.eql(domNodeD)
       expect(mounted.get('4.0')).to.eql(domNodeE)
+    })
+    it('patches correctly if there are type mismatches', () => {
+      //     A
+      //    / \
+      //   B   E
+      //  / \
+      // C   D
+      const nodeA = new Component('app')
+      const nodeB = new Vnode('p')
+      const nodeC = new Vnode('hr')
+      const nodeD = new Tnode('hello world')
+      const nodeE = new Tnode('lorem ipsum')
+      nodeA.mountPoint = 0
+      nodeB.mountPoint = 1
+      nodeC.mountPoint = 2
+      nodeD.mountPoint = 3
+      nodeE.mountPoint = 4
+      nodeA.addChild(nodeB)
+      nodeB.addChild(nodeC)
+      nodeB.addChild(nodeD)
+      nodeA.addChild(nodeE)
+
+      const domNodeA = document.createElement('div')
+      const patcher = new Patcher(domNodeA, nodeA)
+
+      // Patch once!
+      while (patcher.patch() && patcher.next());
+      const html = domNodeA.outerHTML
+      expect(html).to.eql('<div><p><hr>hello world</p>lorem ipsum</div>')
     })
   })
   describe('_patchAttrs', () => {

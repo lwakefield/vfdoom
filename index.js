@@ -2,6 +2,7 @@ const noop = () => {}
 const newEl = (tagName) => document.createElement(tagName)
 const nodeTypeMismatch = (a, b) => {
   if (!a || !b) return false
+  if (a instanceof Text && b instanceof Tnode) return true
   if (!a.tagName || !b.tagName) return false
   return a.tagName.toLowerCase() !== b.tagName.toLowerCase()
 }
@@ -65,12 +66,8 @@ export class Tnode extends Node {
     super()
     this.text = text
   }
-  get childNodes () {
-    throw new Error('Text node cannot have childNodes')
-  }
-  set childNodes (val) {
-    throw new Error('Text node cannot have childNodes')
-  }
+  get childNodes () { }
+  set childNodes (val) { }
 }
 
 export class Vfnode extends Node {
@@ -129,12 +126,18 @@ export class Patcher {
       mounted = nodeA
     }
 
+    if (nodeB instanceof Tnode) {
+      return true
+    }
+
     this._patchAttrs(mounted, nodeB)
     return true
   }
   next () {
     let hasNextNode = false
-    if (this.nodeB.firstChild) {
+    if (this.nodeB instanceof Tnode) {
+      hasNextNode = this._upAndAcross()
+    } else if (this.nodeB.firstChild) {
       hasNextNode = this._down()
     } else if (this.nodeB.nextSibling) {
       hasNextNode = this._across()
@@ -201,6 +204,11 @@ export class Patcher {
   _createDomNode (node) {
     const mountKey = `${node.mountPoint}.${node.key || 0}`
     let mounted = this.component.mounted.get(mountKey)
-    return mounted || newEl(node.tagName)
+    if (mounted) return mounted
+
+    if (node instanceof Tnode) return document.createTextNode(node.text)
+    if (node instanceof Vnode) return document.createElement(node.tagName)
+
+    throw new Error('cannot create dom node for: ', node)
   }
 }
