@@ -56,11 +56,11 @@ describe('Node', () => {
     nodeA.addChild(nodeB)
 
     expect(nodeA.firstChild).to.eql(nodeB)
-    expect(nodeA.children[0]).to.eql(nodeB)
+    expect(nodeA.childNodes[0]).to.eql(nodeB)
     expect(nodeB.parentNode).to.eql(nodeA)
   })
 
-  it('adds two children', () => {
+  it('adds two childNodes', () => {
     const nodeA = new Node()
     const nodeB = new Node()
     const nodeC = new Node()
@@ -68,11 +68,11 @@ describe('Node', () => {
     nodeA.addChild(nodeC)
 
     expect(nodeA.firstChild).to.eql(nodeB)
-    expect(nodeA.children[0]).to.eql(nodeB)
+    expect(nodeA.childNodes[0]).to.eql(nodeB)
     expect(nodeB.parentNode).to.eql(nodeA)
 
     expect(nodeA.firstChild.nextSibling).to.eql(nodeC)
-    expect(nodeA.children[1]).to.eql(nodeC)
+    expect(nodeA.childNodes[1]).to.eql(nodeC)
     expect(nodeB.nextSibling).to.eql(nodeC)
     expect(nodeC.parentNode).to.eql(nodeA)
     expect(nodeC.prevSibling).to.eql(nodeB)
@@ -98,20 +98,20 @@ describe('Vfnode', () => {
     const vfnode = new Vfnode(fn)
     expect(vfnode).to.be.ok
   })
-  it('has children', () => {
+  it('has childNodes', () => {
     const vfnode = new Vfnode(fn)
-    const children = vfnode.children
-    expect(children).to.be.ok
-    expect(children[0]).to.be.ok
-    expect(children[1]).to.be.ok
-    expect(children[2]).to.be.ok
+    const childNodes = vfnode.childNodes
+    expect(childNodes).to.be.ok
+    expect(childNodes[0]).to.be.ok
+    expect(childNodes[1]).to.be.ok
+    expect(childNodes[2]).to.be.ok
 
-    expect(children[0].prevSibling).to.eql(null)
-    expect(children[0].nextSibling).to.eql(children[1])
-    expect(children[1].prevSibling).to.eql(children[0])
-    expect(children[1].nextSibling).to.eql(children[2])
-    expect(children[2].prevSibling).to.eql(children[1])
-    expect(children[2].nextSibling).to.eql(null)
+    expect(childNodes[0].prevSibling).to.eql(null)
+    expect(childNodes[0].nextSibling).to.eql(childNodes[1])
+    expect(childNodes[1].prevSibling).to.eql(childNodes[0])
+    expect(childNodes[1].nextSibling).to.eql(childNodes[2])
+    expect(childNodes[2].prevSibling).to.eql(childNodes[1])
+    expect(childNodes[2].nextSibling).to.eql(null)
   })
   it('inherits from parents and siblings', () => {
     const root = new Vnode()
@@ -123,22 +123,22 @@ describe('Vfnode', () => {
     root.addChild(vfnode)
     root.addChild(right)
 
-    const children = vfnode.children
-    expect(children).to.be.ok
-    expect(children[0]).to.be.ok
-    expect(children[1]).to.be.ok
-    expect(children[2]).to.be.ok
+    const childNodes = vfnode.childNodes
+    expect(childNodes).to.be.ok
+    expect(childNodes[0]).to.be.ok
+    expect(childNodes[1]).to.be.ok
+    expect(childNodes[2]).to.be.ok
 
-    expect(children[0].parentNode).to.eql(root)
-    expect(children[1].parentNode).to.eql(root)
-    expect(children[2].parentNode).to.eql(root)
+    expect(childNodes[0].parentNode).to.eql(root)
+    expect(childNodes[1].parentNode).to.eql(root)
+    expect(childNodes[2].parentNode).to.eql(root)
 
-    expect(children[0].prevSibling).to.eql(left)
-    expect(children[0].nextSibling).to.eql(children[1])
-    expect(children[1].prevSibling).to.eql(children[0])
-    expect(children[1].nextSibling).to.eql(children[2])
-    expect(children[2].prevSibling).to.eql(children[1])
-    expect(children[2].nextSibling).to.eql(right)
+    expect(childNodes[0].prevSibling).to.eql(left)
+    expect(childNodes[0].nextSibling).to.eql(childNodes[1])
+    expect(childNodes[1].prevSibling).to.eql(childNodes[0])
+    expect(childNodes[1].nextSibling).to.eql(childNodes[2])
+    expect(childNodes[2].prevSibling).to.eql(childNodes[1])
+    expect(childNodes[2].nextSibling).to.eql(right)
   })
 })
 
@@ -163,7 +163,7 @@ describe('treeFromStr', () => {
     expect(nodeC).to.be.instanceof(Node)
     expect(nodeC.parentNode).to.eql(nodeB)
 
-    const nodeD = nodeA.children[1]
+    const nodeD = nodeA.childNodes[1]
     expect(nodeD).to.be.ok
     expect(nodeD).to.be.instanceof(Node)
     expect(nodeD.parentNode).to.eql(nodeA)

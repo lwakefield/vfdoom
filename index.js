@@ -7,26 +7,26 @@ const nodeTypeMismatch = (a, b) => {
 }
 
 export class Node {
-  children = []
+  childNodes = []
   parentNode = null
   prevSibling = null
   nextSibling = null
 
   addChild (child) {
-    this.children.push(child)
+    this.childNodes.push(child)
     child.parentNode = this
 
-    const len = this.children.length
+    const len = this.childNodes.length
     if (len < 2) return
 
-    const lastChild = this.children[len - 2]
+    const lastChild = this.childNodes[len - 2]
     lastChild.nextSibling = child
     child.prevSibling = lastChild
   }
 
   get firstChild () {
-    const children = this.children
-    return children.length ? children[0] : null
+    const childNodes = this.childNodes
+    return childNodes.length ? childNodes[0] : null
   }
 }
 
@@ -65,11 +65,11 @@ export class Tnode extends Node {
     super()
     this.text = text
   }
-  get children () {
-    throw new Error('Text node cannot have children')
+  get childNodes () {
+    throw new Error('Text node cannot have childNodes')
   }
-  set children (val) {
-    throw new Error('Text node cannot have children')
+  set childNodes (val) {
+    throw new Error('Text node cannot have childNodes')
   }
 }
 
@@ -78,29 +78,29 @@ export class Vfnode extends Node {
     super()
     this.fn = fn
   }
-  get children () {
-    // We expect fn() to return an array of unconnected children
-    const children = this.fn()
-    const len = children.length
-    if (!len) return children
+  get childNodes () {
+    // We expect fn() to return an array of unconnected childNodes
+    const childNodes = this.fn()
+    const len = childNodes.length
+    if (!len) return childNodes
 
-    // Now we connect the children
+    // Now we connect the childNodes
     const join = (nodeA, nodeB) => {
       nodeA.nextSibling = nodeB
       nodeB.prevSibling = nodeA
     }
 
-    children[0].prevSibling = this.prevSibling
+    childNodes[0].prevSibling = this.prevSibling
     for (let i = 0; i < len - 1; i++) {
-      join(children[i], children[i+1])
-      children[i].parentNode = this.parentNode
+      join(childNodes[i], childNodes[i+1])
+      childNodes[i].parentNode = this.parentNode
     }
-    children[len-1].nextSibling = this.nextSibling
-    children[len-1].parentNode = this.parentNode
+    childNodes[len-1].nextSibling = this.nextSibling
+    childNodes[len-1].parentNode = this.parentNode
 
-    return children
+    return childNodes
   }
-  set children (val) {}
+  set childNodes (val) {}
 }
 
 export class Patcher {
