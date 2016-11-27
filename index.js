@@ -149,15 +149,16 @@ export class Patcher {
     return true
   }
   next () {
+    // TODO: nullify the nodes when hasNextNode is false?
     let hasNextNode = false
-    if (this.nodeB instanceof Tnode) {
-      hasNextNode = this._upAndAcross()
-    } else if (this.nodeB instanceof Component && this.nodeB !== this.component) {
+    const isTnode = this.nodeB instanceof Tnode
+    const isChildComponent = this.nodeB instanceof Component &&
+      this.nodeB !== this.component
+    const isLeaf = isTnode || isChildComponent
+    if (isLeaf) {
       hasNextNode = this._upAndAcross()
     } else if (this.nodeB.firstChild) {
-      hasNextNode = this._down()
-    } else if (this.nodeB.nextSibling) {
-      hasNextNode = this._across()
+      hasNextNode = this._downAndLeft()
     } else {
       hasNextNode = this._upAndAcross()
     }
@@ -178,7 +179,7 @@ export class Patcher {
       dnode.removeAttribute(key)
     }
   }
-  _down () {
+  _downAndLeft () {
     if (!this.nodeB.firstChild) return false
 
     this.nodeB = this.nodeB.firstChild
@@ -188,18 +189,6 @@ export class Patcher {
       this.nodeA.appendChild(this._createDomNode(this.nodeB))
     }
     this.nodeA = this.nodeA.firstChild
-    return true
-  }
-  _across () {
-    if (!this.nodeB.nextSibling) return false
-
-    this.nodeB = this.nodeB.nextSibling
-    const nextNodeA = this.nodeA.nextSibling
-    const mismatch = nodeTypeMismatch(nextNodeA, this.nodeB)
-    if (!nextNodeA || mismatch) {
-      this.nodeA.parentNode.appendChild(this._createDomNode(this.nodeB))
-    }
-    this.nodeA = this.nodeA.nextSibling
     return true
   }
   _upAndAcross () {
