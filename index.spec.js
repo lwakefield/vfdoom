@@ -357,6 +357,47 @@ describe('Patcher', () => {
       expect(mounted.get('3.0')).to.eql(domNodeD)
       expect(mounted.get('4.0')).to.eql(domNodeE)
     })
+    it('removes stray nodes', () => {
+      //     A          A
+      // ┌─┬─┼─┬─┐ -> ┌─┼─┐
+      // B C D E F    B C D
+      const nodeA = new Component('app')
+      const [
+        nodeB,
+        nodeC,
+        nodeD,
+        nodeE,
+        nodeF,
+      ] = makeVnodes('div', 5)
+      nodeA.mountPoint = 0
+      nodeB.mountPoint = 1
+      nodeC.mountPoint = 2
+      nodeD.mountPoint = 3
+      nodeE.mountPoint = 4
+      nodeF.mountPoint = 5
+      nodeA.addChild(nodeB)
+      nodeA.addChild(nodeC)
+      nodeA.addChild(nodeD)
+      nodeA.addChild(nodeE)
+      nodeA.addChild(nodeF)
+
+      const dnodeA = document.createElement('div')
+      nodeA.mount(dnodeA)
+
+      nodeA.patch()
+
+      expect(dnodeA.outerHTML).to.eql(
+        '<div><div></div><div></div><div></div><div></div><div></div></div>'
+      )
+
+      nodeA.removeChild(nodeE)
+      nodeA.removeChild(nodeF)
+      nodeA.patch()
+
+      expect(dnodeA.outerHTML).to.eql(
+        '<div><div></div><div></div><div></div></div>'
+      )
+    })
     it('patches correctly if there are type mismatches', () => {
       //     A
       //    / \

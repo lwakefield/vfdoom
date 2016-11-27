@@ -37,6 +37,19 @@ export class Node {
     child.prevSibling = lastChild
   }
 
+  removeChild (child) {
+    const index = this.childNodes.indexOf(child)
+    this.childNodes.splice(index, 1)
+
+    if (child.prevSibling) {
+      child.prevSibling.nextSibling = child.nextSibling
+    }
+    if (child.nextSibling) {
+      child.nextSibling.prevSibling = child.prevSibling
+    }
+    child.parentNode = null
+  }
+
   get firstChild () {
     /**
      * We need to accomodate for vfnodes and the chance that they may be empty.
@@ -166,7 +179,6 @@ export class Patcher {
    * Both next() and patch() are integral to the patching process. next() is
    * responsible for creating/removing/reordering nodes in the tree. patch() is
    * responsible for adding attributes and event listeners.
-   * TODO: make sure that stray child nodes are removed.
    */
   constructor (node, component) {
     this.component = component
@@ -240,6 +252,8 @@ export class Patcher {
     if (!this.nodeB.firstChild) return false
 
     this.nodeB = this.nodeB.firstChild
+    // TODO: a lot of the logic over the next ~8 lines looks pretty similar to
+    // that of _upAndAcross, would be nice to refactor it somehow...
     const nextNodeA = this.nodeA.firstChild
     const mismatch = nodeTypeMismatch(nextNodeA, this.nodeB)
     const liveNodeA = this._getMountedOrCreateNode(this.nodeB)
@@ -252,14 +266,8 @@ export class Patcher {
     return true
   }
   _upAndAcross () {
-    /**
-     * We will have to deal with vfnodes here. There are a couple of cases which
-     * we need to consider when the vfnode is empty.
-     * 1. if the vfnode has a sibling, we should continue to that
-     *   a. what if the sibling is also an empty vfnode
-     * 2. if the vfnode does not have a sibling, we should continue upward
-     */
     while (!this.nodeB.nextSibling && this.nodeB.parentNode) {
+      this._clean(this.nodeA.nextSibling)
       this.nodeB = this.nodeB.parentNode
       this.nodeA = this.nodeA.parentNode
     }
@@ -287,6 +295,15 @@ export class Patcher {
     if (node instanceof Component) return document.createElement(node.tagName)
 
     throw new Error('cannot create dom node for: ', node)
+  }
+  _clean (node) {
+    if (!node || !node.parentNode) return
+
+    while (node) {
+      const next = node.nextSibling
+      node.parentNode.removeChild(node)
+      node = next
+    }
   }
 }
 
