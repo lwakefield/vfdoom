@@ -42,6 +42,8 @@ export class Component extends Node {
   attributes = []
   mounted = new Map()
   recycled = {}
+  el = null
+  patcher = null
   constructor (componentName, tagName='div') {
     super()
     this.componentName = componentName
@@ -50,6 +52,14 @@ export class Component extends Node {
   recycle (node) {
     if (!node.parentNode) return
     node.parentNode.removeChild(node)
+  }
+  mount (el) {
+    this.el = el
+    this.patcher = new Patcher(el, this)
+  }
+  patch () {
+    this.patcher.reset()
+    while (this.patcher.patch() && this.patcher.next());
   }
 }
 
@@ -127,6 +137,11 @@ export class Patcher {
     }
 
     if (nodeB instanceof Tnode) {
+      nodeA.textContent = nodeB.text
+      return true
+    } else if (nodeB instanceof Component && nodeB !== this.component) {
+      if (!nodeB.el) nodeB.mount(nodeA)
+      nodeB.patch()
       return true
     }
 
@@ -136,6 +151,8 @@ export class Patcher {
   next () {
     let hasNextNode = false
     if (this.nodeB instanceof Tnode) {
+      hasNextNode = this._upAndAcross()
+    } else if (this.nodeB instanceof Component && this.nodeB !== this.component) {
       hasNextNode = this._upAndAcross()
     } else if (this.nodeB.firstChild) {
       hasNextNode = this._down()
@@ -208,7 +225,20 @@ export class Patcher {
 
     if (node instanceof Tnode) return document.createTextNode(node.text)
     if (node instanceof Vnode) return document.createElement(node.tagName)
+    if (node instanceof Component) return document.createElement(node.tagName)
 
     throw new Error('cannot create dom node for: ', node)
   }
+}
+
+export function sandbox (fnOrString, scope={}) {
+  let src = null
+  if (fnOrString instanceof Function)    src = `(${fnOrString.toString()})()`
+  else if (fnOrString instanceof String) src = fnOrString
+  else throw new Error('cannot create sandbox for: ', fnOrString)
+
+  const fn = new Function('scope', `
+    with (scope) return ${src}
+  `)
+  return fn.bind(null, scope)
 }

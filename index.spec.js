@@ -9,6 +9,7 @@ import {
   Vfnode,
   Component,
   Patcher,
+  sandbox,
 } from './index.js'
 
 function treeFromStr (str) {
@@ -406,7 +407,7 @@ describe('Patcher', () => {
       expect(mounted.get('3.0')).to.eql(domNodeD)
       expect(mounted.get('4.0')).to.eql(domNodeE)
     })
-    it('patches correctly if there are type mismatches', () => {
+    it('patches correctly with Tnodes', () => {
       //     A
       //    / \
       //   B   E
@@ -434,6 +435,63 @@ describe('Patcher', () => {
       while (patcher.patch() && patcher.next());
       const html = domNodeA.outerHTML
       expect(html).to.eql('<div><p><hr>hello world</p>lorem ipsum</div>')
+    })
+    it('patches correctly with nested Components', () => {
+      //   A
+      //  / \
+      // B   E*
+      // |   |
+      // C   F
+      // |   |
+      // D   G
+      const nodeA = new Component('app')
+      const nodeB = new Vnode('section')
+      const nodeC = new Vnode('h1')
+      const nodeD = new Tnode('hello world')
+
+      const nodeE = new Component('foo')
+      const nodeF = new Vnode('p')
+      const nodeG = new Tnode('lorem ipsum')
+
+      nodeA.mountPoint = 0
+      nodeB.mountPoint = 1
+      nodeC.mountPoint = 2
+      nodeD.mountPoint = 3
+      nodeE.mountPoint = 4
+      nodeF.mountPoint = 0
+      nodeG.mountPoint = 1
+
+      nodeA.addChild(nodeB)
+      nodeB.addChild(nodeC)
+      nodeC.addChild(nodeD)
+
+      nodeA.addChild(nodeE)
+      nodeE.addChild(nodeF)
+      nodeF.addChild(nodeG)
+
+      const domNodeA = document.createElement('div')
+      const patcher = new Patcher(domNodeA, nodeA)
+
+      // Patch once!
+      for (let i = 0; i < 4; i++) {
+        patcher.patch() && patcher.next()
+      }
+      // We are expecting this patch to be the final one of this instance of
+      // patcher, because the nodeE Component whould handle patching of itself.
+      expect(patcher.nodeB).to.eql(nodeE)
+      expect(patcher.patch() && patcher.next()).to.eql(false)
+
+      const html = domNodeA.outerHTML
+      expect(html).to.eql(normalizeHTML(`
+        <div>
+          <section>
+            <h1>hello world</h1>
+          </section>
+          <div>
+            <p>lorem ipsum</p>
+          </div>
+        </div>
+      `))
     })
   })
   describe('_patchAttrs', () => {
@@ -481,5 +539,30 @@ describe('Patcher', () => {
       const html = dnode.outerHTML
       expect(html).to.eql('<div id="foo" class="one two three"></div>')
     })
+  })
+})
+
+describe('sandbox', () => {
+  const fn = function () {
+    return 'hello world'
+  }
+  it('initializes correctly', () => {
+    const sandboxed = sandbox(fn, {})
+    expect(sandboxed).to.be.ok
+  })
+  it('works correctly', () => {
+    const sandboxed = sandbox(fn, {})
+    expect(sandboxed()).to.eql('hello world')
+  })
+  it('works correctly with scope', () => {
+    const fn = function () {
+      // eslint-disable-next-line no-undef
+      return msg
+    }
+    const scope = {msg: 'hello world'}
+    const sandboxed = sandbox(fn, scope)
+    expect(sandboxed()).to.eql('hello world')
+    scope.msg = 'hello again world'
+    expect(sandboxed()).to.eql('hello again world')
   })
 })
