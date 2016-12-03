@@ -6,6 +6,12 @@ const nodeTypeMismatch = (a, b) => {
   if (!a.tagName || !b.tagName) return false
   return a.tagName.toLowerCase() !== b.tagName.toLowerCase()
 }
+export function objGet(obj, path) {
+  const keys = path.split('.')
+  return keys.reduce((curr, key) => {
+    return curr != null && key in curr ? curr[key] : null
+  }, obj)
+}
 
 /**
  * Ideally we want to keep our vdom as clean as possible. This is easy if the
@@ -22,8 +28,9 @@ const nodeTypeMismatch = (a, b) => {
 export class Node {
   childNodes = []
   parentNode = null
-  _prevSibling = null
-  _nextSibling = null
+  prevSibling = null
+  nextSibling = null
+  props = {}
 
   addChild (child) {
     this.childNodes.push(child)
@@ -69,20 +76,32 @@ export class Node {
     return node
   }
 
-  set nextSibling (sibling) {
-    // TODO: I am not yet sure if we need to do the same as above to check for
-    // empty vfnodes...
-    this._nextSibling = sibling
+  // set nextSibling (sibling) {
+  //   // TODO: I am not yet sure if we need to do the same as above to check for
+  //   // empty vfnodes...
+  // }
+
+  get scope () {
+    /**
+     * Scope is passed downstream. Props can be thought of as isolated scoped 
+     * variables that have been explicitly passed in.
+     */
+    if (!this._scope) {
+      // Fetch the scope from upstream and cache the reference.
+      this._scope = this.parentNode ? this.parentNode.scope : null
+    }
+    return Object.assign({}, this._props, this._scope)
   }
-  get nextSibling () {
-    let node = this._nextSibling
-    return this._nextSibling
+  set scope (val) {
+    this._scope = val
   }
-  set prevSibling (sibling) {
-    this._prevSibling = sibling
-  }
-  get prevSibling () {
-    return this._prevSibling
+
+  clone () {
+    const proto = Object.getPrototypeOf(this);
+    const {childNodes, parentNode, prevSibling, nextSibling} = this
+    return Object.assign(Object.create(proto), {
+      childNodes, parentNode, prevSibling, nextSibling, props: {}
+    });
   }
 }
 
@@ -129,8 +148,12 @@ export class Vnode extends Node {
 export class Tnode extends Node {
   constructor (text) {
     super()
-    this.text = text
+    this._text = text
   }
+  get text () {
+    return this._text instanceof Function ? this._text(this.scope) : this._text
+  }
+  set text (val) {}
   get childNodes () { }
   set childNodes (val) { }
 }
@@ -147,7 +170,7 @@ export class Vfnode extends Node {
   }
   get childNodes () {
     // We expect fn() to return an array of unconnected childNodes
-    const childNodes = this.fn()
+    const childNodes = this.fn(this.scope)
     const len = childNodes.length
     if (!len) return childNodes
 
@@ -172,6 +195,90 @@ export class Vfnode extends Node {
     return childNodes
   }
   set childNodes (val) {}
+}
+
+export class VForNode extends Node {
+  _blueprint = null
+  _childNodes = new Map()
+  constructor (expression, keyedWith=null) {
+    super()
+    const parsedExpression = VForNode._parseExpression(expression)
+    this.local = parsedExpression.local
+    this.from = parsedExpression.from
+    this.keyedWith = keyedWith
+  }
+  static _parseExpression (expression) {
+    const match = expression.match(/(.+)\s+(of|in)\s+(.+)/)
+    return {local: match[1], from: match[3]}
+  }
+  get childNodes () {
+    const from = objGet(this.scope, this.from)
+    if (from instanceof Array) {
+      const children = from.map((v, k) => {
+        const key = this.keyedWith ? objGet(v, this.keyedWith) : k
+        const mountKey = `${this.mountPoint}.${key}`
+        let child = this._childNodes.get(mountKey)
+        if (!child) {
+          child = this._blueprint.clone()
+          this._childNodes.set(mountKey, child)
+        }
+
+        child.props[this.local] = v
+        if (this.index) child.props[this.index] = v
+
+        return child
+      })
+      this._linkChildren(children)
+      return children
+    }
+    return null
+  }
+  _linkChildren (childNodes) {
+    const len = childNodes.length
+    // Now we connect the childNodes
+    const join = (nodeA, nodeB) => {
+      nodeA.nextSibling = nodeB
+      nodeB.prevSibling = nodeA
+    }
+    for (let i = 0; i < len; i++) {
+      if (i == 0) {
+        childNodes[0].prevSibling = this.prevSibling
+      }
+      if (i == len - 1) {
+        childNodes[len - 1].nextSibling = this.nextSibling
+      } else {
+        join(childNodes[i], childNodes[i+1])
+      }
+      childNodes[i].parentNode = this.parentNode
+      childNodes[i].mountPoint = this.mountPoint
+    }
+  }
+  set childNodes (val) {
+    /**
+     * We expect a VForNode to only have one child which will be used as a
+     * template/blueprint
+     */
+    this._blueprint = val
+  }
+  addChild (child) {
+    /**
+     * We are not expecting this function to be called
+     */
+    throw new Exception ('A VForNode may only have a single child')
+  }
+}
+
+export class Vattribute {
+  constructor (name, value) {
+    this.name = name
+    this.value = value
+  }
+  get value () {
+    return this._value instanceof Function ? this._value() : this._value
+  }
+  set value (val) {
+    this._value = val
+  }
 }
 
 export class Patcher {
@@ -307,14 +414,14 @@ export class Patcher {
   }
 }
 
-export function sandbox (fnOrString, scope={}) {
+export function sandbox (fnOrString) {
   let src = null
   if (fnOrString instanceof Function)    src = `(${fnOrString.toString()})()`
   else if (fnOrString instanceof String) src = fnOrString
   else throw new Error('cannot create sandbox for: ', fnOrString)
 
   const fn = new Function('scope', `
-    with (scope) return ${src}
+    with (scope || {}) return ${src}
   `)
-  return fn.bind(null, scope)
+  return fn
 }

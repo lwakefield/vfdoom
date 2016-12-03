@@ -7,9 +7,11 @@ import {
   Vnode,
   Tnode,
   Vfnode,
+  VForNode,
   Component,
   Patcher,
   sandbox,
+  objGet,
 } from './index.js'
 
 function treeFromStr (str) {
@@ -141,6 +143,34 @@ describe('Vfnode', () => {
     expect(childNodes[1].nextSibling).to.eql(childNodes[2])
     expect(childNodes[2].prevSibling).to.eql(childNodes[1])
     expect(childNodes[2].nextSibling).to.eql(right)
+  })
+})
+
+describe('Tnode', () => {
+  it('instantiates', () => {
+    expect(new Tnode()).to.be.ok
+  })
+  it('has static text', () => {
+    const tnode = new Tnode('lorem ipsum')
+    expect(tnode.text).to.eql('lorem ipsum')
+  })
+  it('has functional text', () => {
+    const tnode = new Tnode(() => 'lorem ipsum')
+    expect(tnode.text).to.eql('lorem ipsum')
+  })
+  it('has functional text with scope', () => {
+    // eslint-disable-next-line no-undef
+    const tnode = new Tnode(sandbox(() => m))
+    tnode.scope = {m: 'lorem ipsum'}
+    expect(tnode.text).to.eql('lorem ipsum')
+  })
+  it('inherits scope from parent', () => {
+    const parent = new Vnode()
+    parent.scope = {m: 'lorem ipsum'}
+    // eslint-disable-next-line no-undef
+    const tnode = new Tnode(sandbox(() => m))
+    parent.addChild(tnode)
+    expect(tnode.text).to.eql('lorem ipsum')
   })
 })
 
@@ -638,11 +668,11 @@ describe('sandbox', () => {
     return 'hello world'
   }
   it('initializes correctly', () => {
-    const sandboxed = sandbox(fn, {})
+    const sandboxed = sandbox(fn)
     expect(sandboxed).to.be.ok
   })
   it('works correctly', () => {
-    const sandboxed = sandbox(fn, {})
+    const sandboxed = sandbox(fn)
     expect(sandboxed()).to.eql('hello world')
   })
   it('works correctly with scope', () => {
@@ -651,9 +681,85 @@ describe('sandbox', () => {
       return msg
     }
     const scope = {msg: 'hello world'}
-    const sandboxed = sandbox(fn, scope)
-    expect(sandboxed()).to.eql('hello world')
+    const sandboxed = sandbox(fn)
+    expect(sandboxed(scope)).to.eql('hello world')
     scope.msg = 'hello again world'
-    expect(sandboxed()).to.eql('hello again world')
+    expect(sandboxed(scope)).to.eql('hello again world')
+  })
+})
+
+describe('objGet', () => {
+  it('works correctly', () => {
+    expect(objGet({foo: 'one'}, 'foo')).to.eql('one')
+    expect(objGet({foo: {bar: 'two'}}, 'foo.bar')).to.eql('two')
+    expect(objGet({foo: {bar: {baz: 'three'}}}, 'foo.bar.baz')).to.eql('three')
+    expect(objGet({foo: {bar: {baz: 'three'}}}, 'foo.boo.baz')).to.eql(null)
+  })
+})
+
+describe('VForNode', () => {
+  it('instantiates correctly', () => {
+    const node = new VForNode('foo of bar')
+    expect(node).is.ok
+  })
+  it('sets blueprint correctly', () => {
+    const nodeA = new VForNode('foo of bar')
+    const nodeB = new Vnode('p')
+    // eslint-disable-next-line
+    const nodeC = new Tnode(sandbox(() => foo))
+
+    nodeA.childNodes = nodeB
+    nodeB.addChild(nodeC)
+
+    expect(nodeA._blueprint).is.ok
+  })
+  it('creates children correctly', () => {
+    const nodeA = new VForNode('foo of bar')
+    const nodeB = new Vnode('p')
+
+    nodeA.childNodes = nodeB
+    nodeA.mountPoint = 0
+
+    nodeA.scope = {bar: ['one', 'two', 'three']}
+
+    const childNodes = nodeA.childNodes
+    expect(childNodes[0].props).to.eql({foo: 'one'})
+    expect(childNodes[1].props).to.eql({foo: 'two'})
+    expect(childNodes[2].props).to.eql({foo: 'three'})
+
+    expect(nodeA._childNodes.get('0.0')).to.eql(childNodes[0])
+    expect(nodeA._childNodes.get('0.1')).to.eql(childNodes[1])
+    expect(nodeA._childNodes.get('0.2')).to.eql(childNodes[2])
+  })
+})
+
+describe('iota', () => {
+  it('does simple interpolation', () => {
+    // const cases = `
+    //   <a href=\${linkto}>Foo</a>
+
+    //   <p>\${msg}</p>
+
+    //   <li i-for="m of msgs">\${m}</li>
+    // `
+    // const data = {
+    //   linkto: 'https://url.com',
+    //   msg: 'hello world',
+    //   msgs: ['one', 'two', 'three'],
+    // }
+    // // const nodeA = 
+
+    // // for i-for we want to create a template/blueprint and then we probably
+    // // want to cache the instances. Any interpolations that happen inside of the
+    // // looped el, we want to make sure they have access to all of the parent
+    // // scope.
+
+    // // We also want to propagate scope correctly.
+    // // In the following, <p> should have access to `m` as you would expect.
+    // //   <li i-for="m of msgs"><p>${m}</p></li>
+    // // While the foo component does not have access to m
+    // //   <div i-for="m of msgs"><foo /></div>
+    // // Unless we explicitly pass it through...
+    // //   <div i-for="m of msgs"><foo m="m"/></div>
   })
 })
