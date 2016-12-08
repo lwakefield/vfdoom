@@ -30,7 +30,8 @@ export class Node {
   parentNode = null
   prevSibling = null
   nextSibling = null
-  props = {}
+  mounted = null
+  _props = {}
 
   addChild (child) {
     this.childNodes.push(child)
@@ -64,8 +65,8 @@ export class Node {
      * traverse them to find the first tnode or vnode.
      *
      */
-    let node = this.childNodes.length ? this.childNodes[0] : null
-    while (node && node instanceof Vfnode) {
+    let node = (this.childNodes && this.childNodes.length) ? this.childNodes[0] : null
+    while (node && (node instanceof Vfnode || node instanceof VForNode)) {
       const child = node.firstChild
       if (!child) {
         node = node.nextSibling
@@ -83,7 +84,7 @@ export class Node {
 
   get scope () {
     /**
-     * Scope is passed downstream. Props can be thought of as isolated scoped 
+     * Scope is passed downstream. Props can be thought of as isolated scoped
      * variables that have been explicitly passed in.
      */
     if (!this._scope) {
@@ -97,12 +98,37 @@ export class Node {
   }
 
   clone () {
-    const proto = Object.getPrototypeOf(this);
-    const {childNodes, parentNode, prevSibling, nextSibling} = this
-    return Object.assign(Object.create(proto), {
-      childNodes, parentNode, prevSibling, nextSibling, props: {}
-    });
+    /**
+     * Cloning a node will return a node that is de-associated it with it's
+     * parent and siblings.
+     */
+    const inst = this._newInstance()
+
+    let child = this.firstChild
+    while (child) {
+      inst.addChild(child.clone())
+      child = child.nextSibling
+    }
+    return inst
   }
+  _newInstance () {
+    return new this.constructor()
+  }
+  get mounted () {
+    if (!this._mounted) {
+      if (this instanceof Tnode) {
+        this._mounted = document.createTextNode(this.text)
+      } else if (this instanceof Vnode) {
+        this._mounted = document.createElement(this.tagName)
+      } else if (this instanceof Component) {
+        this._mounted = document.createElement(this.tagName)
+      } else {
+        throw new Error('cannot create dom node for: ', this)
+      }
+    }
+    return this._mounted
+  }
+  set mounted (val) { this._mounted = val }
 }
 
 export class Component extends Node {
@@ -114,26 +140,27 @@ export class Component extends Node {
    * by the Component
    */
   attributes = []
-  mounted = new Map()
-  recycled = {}
-  el = null
   patcher = null
   constructor (componentName, tagName='div') {
     super()
     this.componentName = componentName
     this.tagName = tagName
+    this.scope = {}
   }
   recycle (node) {
     if (!node.parentNode) return
     node.parentNode.removeChild(node)
   }
   mount (el) {
-    this.el = el
-    this.patcher = new Patcher(this.el, this)
+    this._mounted = el
+    this.patcher = new Patcher(this._mounted, this)
   }
   patch () {
     this.patcher.reset()
     while (this.patcher.patch() && this.patcher.next());
+  }
+  _newInstance() {
+    return new Component(this.componentName, this.tagName)
   }
 }
 
@@ -142,6 +169,9 @@ export class Vnode extends Node {
   constructor (tagName) {
     super()
     this.tagName = tagName
+  }
+  _newInstance() {
+    return new Vnode(this.tagName)
   }
 }
 
@@ -156,6 +186,9 @@ export class Tnode extends Node {
   set text (val) {}
   get childNodes () { }
   set childNodes (val) { }
+  _newInstance() {
+    return new Tnode(this._text)
+  }
 }
 
 export class Vfnode extends Node {
@@ -220,18 +253,20 @@ export class VForNode extends Node {
         let child = this._childNodes.get(mountKey)
         if (!child) {
           child = this._blueprint.clone()
+          child.key = key
+          child.parentNode = this.parentNode
           this._childNodes.set(mountKey, child)
         }
 
-        child.props[this.local] = v
-        if (this.index) child.props[this.index] = v
+        child._props[this.local] = v
+        if (this.index) child._props[this.index] = v
 
         return child
       })
       this._linkChildren(children)
       return children
     }
-    return null
+    return []
   }
   _linkChildren (childNodes) {
     const len = childNodes.length
@@ -264,7 +299,7 @@ export class VForNode extends Node {
     /**
      * We are not expecting this function to be called
      */
-    throw new Exception ('A VForNode may only have a single child')
+    throw new Error('A VForNode may only have a single child, set with childNodes = ')
   }
 }
 
@@ -301,9 +336,7 @@ export class Patcher {
   patch () {
     let {nodeA, nodeB, component} = this
 
-    const mountKey = `${nodeB.mountPoint}.${nodeB.key || 0}`
-
-    let mounted = component.mounted.get(mountKey)
+    let mounted = nodeB.mounted
     if (mounted && nodeA !== mounted) {
       component.recycle(nodeA)
       nodeA = mounted
@@ -363,7 +396,7 @@ export class Patcher {
     // that of _upAndAcross, would be nice to refactor it somehow...
     const nextNodeA = this.nodeA.firstChild
     const mismatch = nodeTypeMismatch(nextNodeA, this.nodeB)
-    const liveNodeA = this._getMountedOrCreateNode(this.nodeB)
+    const liveNodeA = this.nodeB.mounted
     if (!nextNodeA) {
       this.nodeA.appendChild(liveNodeA)
     } else if (mismatch || nextNodeA !== liveNodeA) {
@@ -383,7 +416,7 @@ export class Patcher {
     this.nodeB = this.nodeB.nextSibling
     const nextNodeA = this.nodeA.nextSibling
     const mismatch = nodeTypeMismatch(nextNodeA, this.nodeB)
-    const liveNodeA = this._getMountedOrCreateNode(this.nodeB)
+    const liveNodeA = this.nodeB.mounted
     if (!nextNodeA) {
       this.nodeA.parentNode.appendChild(liveNodeA)
     } else if (mismatch || nextNodeA !== liveNodeA) {

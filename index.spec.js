@@ -346,7 +346,8 @@ describe('Patcher', () => {
       nodeA.addChild(nodeE)
 
       const domNodeA = document.createElement('div')
-      const patcher = new Patcher(domNodeA, nodeA)
+      nodeA.mount(domNodeA)
+      const patcher = nodeA.patcher
 
       // Patch once!
       while (patcher.patch() && patcher.next());
@@ -356,12 +357,11 @@ describe('Patcher', () => {
       const domNodeD = domNodeC.nextSibling
       const domNodeE = domNodeB.nextSibling
 
-      const mounted = nodeA.mounted
-      expect(mounted.get('0.0')).to.eql(domNodeA)
-      expect(mounted.get('1.0')).to.eql(domNodeB)
-      expect(mounted.get('2.0')).to.eql(domNodeC)
-      expect(mounted.get('3.0')).to.eql(domNodeD)
-      expect(mounted.get('4.0')).to.eql(domNodeE)
+      expect(nodeA.mounted).to.eql(domNodeA)
+      expect(nodeB.mounted).to.eql(domNodeB)
+      expect(nodeC.mounted).to.eql(domNodeC)
+      expect(nodeD.mounted).to.eql(domNodeD)
+      expect(nodeE.mounted).to.eql(domNodeE)
 
       // Patch again!
       // We shouldn't see any changes..
@@ -370,22 +370,22 @@ describe('Patcher', () => {
       expect(patcher.nodeB).to.eql(nodeA)
 
       while (patcher.patch() && patcher.next());
-      expect(mounted.get('0.0')).to.eql(domNodeA)
-      expect(mounted.get('1.0')).to.eql(domNodeB)
-      expect(mounted.get('2.0')).to.eql(domNodeC)
-      expect(mounted.get('3.0')).to.eql(domNodeD)
-      expect(mounted.get('4.0')).to.eql(domNodeE)
+      expect(nodeA.mounted).to.eql(domNodeA)
+      expect(nodeB.mounted).to.eql(domNodeB)
+      expect(nodeC.mounted).to.eql(domNodeC)
+      expect(nodeD.mounted).to.eql(domNodeD)
+      expect(nodeE.mounted).to.eql(domNodeE)
 
       // Let's interfere, then patch again!
       patcher.reset()
       domNodeA.innerHTML = ''
 
       while (patcher.patch() && patcher.next());
-      expect(mounted.get('0.0')).to.eql(domNodeA)
-      expect(mounted.get('1.0')).to.eql(domNodeB)
-      expect(mounted.get('2.0')).to.eql(domNodeC)
-      expect(mounted.get('3.0')).to.eql(domNodeD)
-      expect(mounted.get('4.0')).to.eql(domNodeE)
+      expect(nodeA.mounted).to.eql(domNodeA)
+      expect(nodeB.mounted).to.eql(domNodeB)
+      expect(nodeC.mounted).to.eql(domNodeC)
+      expect(nodeD.mounted).to.eql(domNodeD)
+      expect(nodeE.mounted).to.eql(domNodeE)
     })
     it('removes stray nodes', () => {
       //     A          A
@@ -461,7 +461,8 @@ describe('Patcher', () => {
           <p></p>
         </p>
       `
-      const patcher = new Patcher(domNodeA, nodeA)
+      nodeA.mount(domNodeA)
+      const patcher = nodeA.patcher
 
       // Patch once!
       while (patcher.patch() && patcher.next());
@@ -471,12 +472,11 @@ describe('Patcher', () => {
       const domNodeD = domNodeC.nextSibling
       const domNodeE = domNodeB.nextSibling
 
-      const mounted = nodeA.mounted
-      expect(mounted.get('0.0')).to.eql(domNodeA)
-      expect(mounted.get('1.0')).to.eql(domNodeB)
-      expect(mounted.get('2.0')).to.eql(domNodeC)
-      expect(mounted.get('3.0')).to.eql(domNodeD)
-      expect(mounted.get('4.0')).to.eql(domNodeE)
+      expect(nodeA.mounted).to.eql(domNodeA)
+      expect(nodeB.mounted).to.eql(domNodeB)
+      expect(nodeC.mounted).to.eql(domNodeC)
+      expect(nodeD.mounted).to.eql(domNodeD)
+      expect(nodeE.mounted).to.eql(domNodeE)
     })
     it('patches correctly with Tnodes', () => {
       //     A
@@ -564,7 +564,7 @@ describe('Patcher', () => {
         </div>
       `))
     })
-    it('patches correctly with vfnode children', () => {
+    it.skip('patches correctly with vfnode children', () => {
       const fn0 = () => {
         const children = [new Vnode('p'), new Vnode('p'), new Vnode('p')]
         children[0].key = 0
@@ -613,6 +613,25 @@ describe('Patcher', () => {
       expect(patcher.nodeA).to.eql(dnodeB2)
       patcher.patch() && patcher.next()
       expect(patcher.nodeA).to.eql(dnodeB0)
+    })
+    it.skip('patches correctly with VForNode children', () => {
+      const nodeA = new Component('app')
+      nodeA._scope.msgs = ['one', 'two', 'three']
+      const nodeB = new VForNode('msg in msgs')
+      const nodeC = new Vnode('p')
+      // eslint-disable-next-line no-undef
+      const nodeD = new Tnode(sandbox(() => msg))
+      nodeA.mountPoint = 0
+      nodeB.mountPoint = 1
+      nodeD.mountPoint = 2
+      nodeA.addChild(nodeB)
+      nodeB.childNodes = nodeC
+      nodeC.addChild(nodeD)
+
+      const dnode = document.createElement('div')
+      nodeA.mount(dnode)
+      nodeA.patch()
+      console.log(dnode.outerHTML)
     })
   })
   describe('_patchAttrs', () => {
@@ -730,6 +749,11 @@ describe('VForNode', () => {
     expect(nodeA._childNodes.get('0.0')).to.eql(childNodes[0])
     expect(nodeA._childNodes.get('0.1')).to.eql(childNodes[1])
     expect(nodeA._childNodes.get('0.2')).to.eql(childNodes[2])
+
+    const childNodes1 = nodeA.childNodes
+    expect(childNodes1[0]).to.eql(childNodes[0])
+    expect(childNodes1[1]).to.eql(childNodes[1])
+    expect(childNodes1[2]).to.eql(childNodes[2])
   })
 })
 
