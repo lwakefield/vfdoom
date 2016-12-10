@@ -263,11 +263,6 @@ describe('Patcher', () => {
         nodeD,
         nodeE,
       ] = makeVnodes('div', 5)
-      nodeA.mountPoint = 0
-      nodeB.mountPoint = 1
-      nodeC.mountPoint = 2
-      nodeD.mountPoint = 3
-      nodeE.mountPoint = 4
       nodeA.addChild(nodeB)
       nodeB.addChild(nodeC)
       nodeB.addChild(nodeD)
@@ -335,11 +330,6 @@ describe('Patcher', () => {
         nodeD,
         nodeE,
       ] = makeVnodes('div', 5)
-      nodeA.mountPoint = 0
-      nodeB.mountPoint = 1
-      nodeC.mountPoint = 2
-      nodeD.mountPoint = 3
-      nodeE.mountPoint = 4
       nodeA.addChild(nodeB)
       nodeB.addChild(nodeC)
       nodeB.addChild(nodeD)
@@ -399,12 +389,6 @@ describe('Patcher', () => {
         nodeE,
         nodeF,
       ] = makeVnodes('div', 5)
-      nodeA.mountPoint = 0
-      nodeB.mountPoint = 1
-      nodeC.mountPoint = 2
-      nodeD.mountPoint = 3
-      nodeE.mountPoint = 4
-      nodeF.mountPoint = 5
       nodeA.addChild(nodeB)
       nodeA.addChild(nodeC)
       nodeA.addChild(nodeD)
@@ -441,11 +425,6 @@ describe('Patcher', () => {
         nodeD,
         nodeE,
       ] = makeVnodes('div', 5)
-      nodeA.mountPoint = 0
-      nodeB.mountPoint = 1
-      nodeC.mountPoint = 2
-      nodeD.mountPoint = 3
-      nodeE.mountPoint = 4
       nodeA.addChild(nodeB)
       nodeB.addChild(nodeC)
       nodeB.addChild(nodeD)
@@ -489,11 +468,6 @@ describe('Patcher', () => {
       const nodeC = new Vnode('hr')
       const nodeD = new Tnode('hello world')
       const nodeE = new Tnode('lorem ipsum')
-      nodeA.mountPoint = 0
-      nodeB.mountPoint = 1
-      nodeC.mountPoint = 2
-      nodeD.mountPoint = 3
-      nodeE.mountPoint = 4
       nodeA.addChild(nodeB)
       nodeB.addChild(nodeC)
       nodeB.addChild(nodeD)
@@ -523,14 +497,6 @@ describe('Patcher', () => {
       const nodeE = new Component('foo')
       const nodeF = new Vnode('p')
       const nodeG = new Tnode('lorem ipsum')
-
-      nodeA.mountPoint = 0
-      nodeB.mountPoint = 1
-      nodeC.mountPoint = 2
-      nodeD.mountPoint = 3
-      nodeE.mountPoint = 4
-      nodeF.mountPoint = 0
-      nodeG.mountPoint = 1
 
       nodeA.addChild(nodeB)
       nodeB.addChild(nodeC)
@@ -584,14 +550,13 @@ describe('Patcher', () => {
       //  (B)    B0 B1 B2    B1 B2 B0
       const nodeA = new Component('app')
       const nodeB = new Vfnode(fn0)
-      nodeA.mountPoint = 0
-      nodeB.mountPoint = 1
       nodeA.addChild(nodeB)
 
       const dnode = document.createElement('div')
       nodeA.mount(dnode)
       nodeA.patch()
 
+      console.log(nodeA.mounted)
       expect(nodeA.mounted.get('0.0')).to.be.ok
       expect(nodeA.mounted.get('1.0')).to.be.ok
       expect(nodeA.mounted.get('1.1')).to.be.ok

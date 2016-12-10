@@ -13,18 +13,6 @@ export function objGet(obj, path) {
   }, obj)
 }
 
-/**
- * Ideally we want to keep our vdom as clean as possible. This is easy if the
- * vdom is static. Here are some things to consider if the structure changes:
- *  - persisting scope
- *  - traversing
- *  - performance and caching
- *  - reusing old nodes
- * It might be worth introducing the concept of template or blueprint nodes.
- * This is only really relevant for vfnodes. But also slightly relevant for
- * interpolation of attrs and tnodes.
- */
-
 export class Node {
   childNodes = []
   parentNode = null
@@ -135,9 +123,6 @@ export class Component extends Node {
   /**
    * A Component is a node, which is responsible for managing Vnodes, Vfnodes
    * and Components
-   * Every nested child of a Component *must* have a mount point.
-   * The management of the mount point is deferred to elsewhere, ie. not managed
-   * by the Component
    */
   attributes = []
   patcher = null
@@ -222,7 +207,6 @@ export class Vfnode extends Node {
         join(childNodes[i], childNodes[i+1])
       }
       childNodes[i].parentNode = this.parentNode
-      childNodes[i].mountPoint = this.mountPoint
     }
 
     return childNodes
@@ -289,7 +273,6 @@ export class VForNode extends Node {
         join(childNodes[i], childNodes[i+1])
       }
       childNodes[i].parentNode = this.parentNode
-      childNodes[i].mountPoint = this.mountPoint
     }
   }
   set childNodes (val) {
@@ -428,17 +411,6 @@ export class Patcher {
     }
     this.nodeA = this.nodeA.nextSibling
     return true
-  }
-  _getMountedOrCreateNode (node) {
-    const mountKey = `${node.mountPoint}.${node.key || 0}`
-    let mounted = this.component.mounted.get(mountKey)
-    if (mounted) return mounted
-
-    if (node instanceof Tnode) return document.createTextNode(node.text)
-    if (node instanceof Vnode) return document.createElement(node.tagName)
-    if (node instanceof Component) return document.createElement(node.tagName)
-
-    throw new Error('cannot create dom node for: ', node)
   }
   _clean (node) {
     if (!node || !node.parentNode) return
