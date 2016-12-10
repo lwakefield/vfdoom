@@ -246,26 +246,27 @@ export class VForNode extends Node {
   }
   get childNodes () {
     const from = objGet(this.scope, this.from)
+    const hasKey = !!this._blueprint.key
+
     if (from instanceof Array) {
       const children = from.map((v, k) => {
-        const key = this.keyedWith ? objGet(v, this.keyedWith) : k
-        const mountKey = `${this.mountPoint}.${key}`
-        let child = this._childNodes.get(mountKey)
+        const key = hasKey ? this._blueprint.key(this.scope) : k
+        let child = this._childNodes.get(key)
+
         if (!child) {
           child = this._blueprint.clone()
-          child.key = key
-          child.parentNode = this.parentNode
-          this._childNodes.set(mountKey, child)
+          this._childNodes.set(key, child)
         }
 
         child._props[this.local] = v
-        if (this.index) child._props[this.index] = v
+        child._props.$index = k
 
         return child
       })
       this._linkChildren(children)
       return children
     }
+
     return []
   }
   _linkChildren (childNodes) {

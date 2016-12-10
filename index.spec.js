@@ -614,16 +614,13 @@ describe('Patcher', () => {
       patcher.patch() && patcher.next()
       expect(patcher.nodeA).to.eql(dnodeB0)
     })
-    it.skip('patches correctly with VForNode children', () => {
+    it.only('patches correctly with VForNode children', () => {
       const nodeA = new Component('app')
       nodeA._scope.msgs = ['one', 'two', 'three']
       const nodeB = new VForNode('msg in msgs')
       const nodeC = new Vnode('p')
       // eslint-disable-next-line no-undef
-      const nodeD = new Tnode(sandbox(() => msg))
-      nodeA.mountPoint = 0
-      nodeB.mountPoint = 1
-      nodeD.mountPoint = 2
+      const nodeD = new Tnode(sandbox(() => `${$index} - ${msg}`))
       nodeA.addChild(nodeB)
       nodeB.childNodes = nodeC
       nodeC.addChild(nodeD)
@@ -631,7 +628,9 @@ describe('Patcher', () => {
       const dnode = document.createElement('div')
       nodeA.mount(dnode)
       nodeA.patch()
-      console.log(dnode.outerHTML)
+      expect(dnode.outerHTML).to.eql(
+        '<div><p>0 - one</p><p>1 - two</p><p>2 - three</p></div>'
+      )
     })
   })
   describe('_patchAttrs', () => {
@@ -737,18 +736,16 @@ describe('VForNode', () => {
     const nodeB = new Vnode('p')
 
     nodeA.childNodes = nodeB
-    nodeA.mountPoint = 0
-
     nodeA.scope = {bar: ['one', 'two', 'three']}
 
     const childNodes = nodeA.childNodes
-    expect(childNodes[0].props).to.eql({foo: 'one'})
-    expect(childNodes[1].props).to.eql({foo: 'two'})
-    expect(childNodes[2].props).to.eql({foo: 'three'})
+    expect(childNodes[0]._props).to.eql({foo: 'one', $index: 0})
+    expect(childNodes[1]._props).to.eql({foo: 'two', $index: 1})
+    expect(childNodes[2]._props).to.eql({foo: 'three', $index: 2})
 
-    expect(nodeA._childNodes.get('0.0')).to.eql(childNodes[0])
-    expect(nodeA._childNodes.get('0.1')).to.eql(childNodes[1])
-    expect(nodeA._childNodes.get('0.2')).to.eql(childNodes[2])
+    expect(nodeA._childNodes.get(0)).to.eql(childNodes[0])
+    expect(nodeA._childNodes.get(1)).to.eql(childNodes[1])
+    expect(nodeA._childNodes.get(2)).to.eql(childNodes[2])
 
     const childNodes1 = nodeA.childNodes
     expect(childNodes1[0]).to.eql(childNodes[0])
