@@ -614,7 +614,7 @@ describe('Patcher', () => {
       patcher.patch() && patcher.next()
       expect(patcher.nodeA).to.eql(dnodeB0)
     })
-    it.only('patches correctly with VForNode children', () => {
+    it('patches correctly with VForNode children', () => {
       const nodeA = new Component('app')
       nodeA._scope.msgs = ['one', 'two', 'three']
       const nodeB = new VForNode('msg in msgs')
@@ -751,6 +751,36 @@ describe('VForNode', () => {
     expect(childNodes1[0]).to.eql(childNodes[0])
     expect(childNodes1[1]).to.eql(childNodes[1])
     expect(childNodes1[2]).to.eql(childNodes[2])
+  })
+  it('creates keyed children correctly', () => {
+    const nodeA = new VForNode('foo of bar')
+    const nodeB = new Vnode('p')
+    nodeB.key = sandbox(() => foo) // eslint-disable-line no-undef
+
+    nodeA.childNodes = nodeB
+    nodeA.scope = {bar: ['one', 'two', 'three']}
+
+    const childNodes = nodeA.childNodes
+    expect(Array.from(nodeA._childNodes.keys())).to.eql(['one', 'two', 'three'])
+    expect(childNodes[0]._props).to.eql({foo: 'one', $index: 0})
+    expect(childNodes[1]._props).to.eql({foo: 'two', $index: 1})
+    expect(childNodes[2]._props).to.eql({foo: 'three', $index: 2})
+
+    expect(nodeA._childNodes.get('one')).to.eql(childNodes[0])
+    expect(nodeA._childNodes.get('two')).to.eql(childNodes[1])
+    expect(nodeA._childNodes.get('three')).to.eql(childNodes[2])
+
+    const childNodes1 = nodeA.childNodes
+    expect(childNodes1[0]).to.eql(childNodes[0])
+    expect(childNodes1[1]).to.eql(childNodes[1])
+    expect(childNodes1[2]).to.eql(childNodes[2])
+
+    nodeA.scope.bar.push('four')
+    const childNodes2 = nodeA.childNodes
+    expect(childNodes2.length).to.eql(4)
+    expect(Array.from(nodeA._childNodes.keys())).to.eql(
+      ['one', 'two', 'three', 'four']
+    )
   })
 })
 

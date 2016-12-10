@@ -250,7 +250,11 @@ export class VForNode extends Node {
 
     if (from instanceof Array) {
       const children = from.map((v, k) => {
-        const key = hasKey ? this._blueprint.key(this.scope) : k
+        const props = {$index: k}
+        props[this.local] = v
+        const scope = Object.assign({}, this.scope, props)
+
+        const key = hasKey ? this._blueprint.key(scope) : k
         let child = this._childNodes.get(key)
 
         if (!child) {
@@ -258,8 +262,7 @@ export class VForNode extends Node {
           this._childNodes.set(key, child)
         }
 
-        child._props[this.local] = v
-        child._props.$index = k
+        child._props = props
 
         return child
       })
