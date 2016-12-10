@@ -80,6 +80,23 @@ describe('Node', () => {
     expect(nodeC.parentNode).to.eql(nodeA)
     expect(nodeC.prevSibling).to.eql(nodeB)
   })
+
+  describe('clone', () => {
+    it('can be cloned', () => {
+      const nodeA = new Node('one', 'two', 'three')
+      expect(Array.from(nodeA.args)).to.eql(['one', 'two', 'three'])
+      const nodeB = nodeA.clone()
+      expect(nodeA === nodeB).to.eql(false)
+    })
+    it('sub classes can be cloned', () => {
+      const nodeA = new Vnode('h1')
+      expect(Array.from(nodeA.args)).to.eql(['h1'])
+      const nodeB = nodeA.clone()
+      expect(nodeA === nodeB).to.eql(false)
+      expect(nodeB instanceof Vnode).to.eql(true)
+      expect(nodeB.tagName).to.eql('h1')
+    })
+  })
 })
 
 describe('Vnode', () => {

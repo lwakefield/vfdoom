@@ -20,6 +20,10 @@ export class Node {
   nextSibling = null
   mounted = null
 
+  constructor () {
+    this.args = arguments
+  }
+
   addChild (child) {
     this.childNodes.push(child)
     child.parentNode = this
@@ -100,7 +104,7 @@ export class Node {
      * Cloning a node will return a node that is de-associated it with it's
      * parent and siblings.
      */
-    const inst = this._newInstance()
+    const inst = new this.constructor(...this.args)
 
     let child = this.firstChild
     while (child) {
@@ -108,9 +112,6 @@ export class Node {
       child = child.nextSibling
     }
     return inst
-  }
-  _newInstance () {
-    return new this.constructor()
   }
   get mounted () {
     if (!this._mounted) {
@@ -137,7 +138,7 @@ export class Component extends Node {
   attributes = []
   patcher = null
   constructor (componentName, tagName='div') {
-    super()
+    super(...arguments)
     this.componentName = componentName
     this.tagName = tagName
     this.scope = {}
@@ -154,25 +155,19 @@ export class Component extends Node {
     this.patcher.reset()
     while (this.patcher.patch() && this.patcher.next());
   }
-  _newInstance() {
-    return new Component(this.componentName, this.tagName)
-  }
 }
 
 export class Vnode extends Node {
   attributes = []
   constructor (tagName) {
-    super()
+    super(...arguments)
     this.tagName = tagName
-  }
-  _newInstance() {
-    return new Vnode(this.tagName)
   }
 }
 
 export class Tnode extends Node {
   constructor (text) {
-    super()
+    super(...arguments)
     this._text = text
   }
   get text () {
@@ -181,16 +176,13 @@ export class Tnode extends Node {
   set text (val) {}
   get childNodes () { }
   set childNodes (val) { }
-  _newInstance() {
-    return new Tnode(this._text)
-  }
 }
 
 export class VForNode extends Node {
   _blueprint = null
   _childNodes = new Map()
   constructor (expression, keyedWith=null) {
-    super()
+    super(...arguments)
     const parsedExpression = VForNode._parseExpression(expression)
     this.local = parsedExpression.local
     this.from = parsedExpression.from
