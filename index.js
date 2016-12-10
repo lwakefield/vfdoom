@@ -19,7 +19,6 @@ export class Node {
   prevSibling = null
   nextSibling = null
   mounted = null
-  _props = {}
 
   addChild (child) {
     this.childNodes.push(child)
@@ -83,6 +82,17 @@ export class Node {
   }
   set scope (val) {
     this._scope = val
+  }
+
+  get props () {
+    if (!this._props) {
+      this._props = {}
+    }
+    return this._props
+  }
+
+  set props(val) {
+    this._props = val
   }
 
   clone () {
@@ -208,7 +218,7 @@ export class VForNode extends Node {
           this._childNodes.set(key, child)
         }
 
-        child._props = props
+        child.props = props
 
         return child
       })
