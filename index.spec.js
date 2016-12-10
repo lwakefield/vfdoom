@@ -6,7 +6,6 @@ import {
   Node,
   Vnode,
   Tnode,
-  Vfnode,
   VForNode,
   Component,
   Patcher,
@@ -89,60 +88,6 @@ describe('Vnode', () => {
 
     expect(vnode).to.be.ok
     expect(vnode.tagName).to.eql('div')
-  })
-})
-
-describe('Vfnode', () => {
-  const fn = () => [
-    new Vnode(),
-    new Vnode(),
-    new Vnode(),
-  ]
-  it('instantiates', () => {
-    const vfnode = new Vfnode(fn)
-    expect(vfnode).to.be.ok
-  })
-  it('has childNodes', () => {
-    const vfnode = new Vfnode(fn)
-    const childNodes = vfnode.childNodes
-    expect(childNodes).to.be.ok
-    expect(childNodes[0]).to.be.ok
-    expect(childNodes[1]).to.be.ok
-    expect(childNodes[2]).to.be.ok
-
-    expect(childNodes[0].prevSibling).to.eql(null)
-    expect(childNodes[0].nextSibling).to.eql(childNodes[1])
-    expect(childNodes[1].prevSibling).to.eql(childNodes[0])
-    expect(childNodes[1].nextSibling).to.eql(childNodes[2])
-    expect(childNodes[2].prevSibling).to.eql(childNodes[1])
-    expect(childNodes[2].nextSibling).to.eql(null)
-  })
-  it('inherits from parents and siblings', () => {
-    const root = new Vnode()
-    const vfnode = new Vfnode(fn)
-    const left = new Vnode()
-    const right = new Vnode()
-
-    root.addChild(left)
-    root.addChild(vfnode)
-    root.addChild(right)
-
-    const childNodes = vfnode.childNodes
-    expect(childNodes).to.be.ok
-    expect(childNodes[0]).to.be.ok
-    expect(childNodes[1]).to.be.ok
-    expect(childNodes[2]).to.be.ok
-
-    expect(childNodes[0].parentNode).to.eql(root)
-    expect(childNodes[1].parentNode).to.eql(root)
-    expect(childNodes[2].parentNode).to.eql(root)
-
-    expect(childNodes[0].prevSibling).to.eql(left)
-    expect(childNodes[0].nextSibling).to.eql(childNodes[1])
-    expect(childNodes[1].prevSibling).to.eql(childNodes[0])
-    expect(childNodes[1].nextSibling).to.eql(childNodes[2])
-    expect(childNodes[2].prevSibling).to.eql(childNodes[1])
-    expect(childNodes[2].nextSibling).to.eql(right)
   })
 })
 
@@ -529,55 +474,6 @@ describe('Patcher', () => {
           </div>
         </div>
       `))
-    })
-    it.skip('patches correctly with vfnode children', () => {
-      const fn0 = () => {
-        const children = [new Vnode('p'), new Vnode('p'), new Vnode('p')]
-        children[0].key = 0
-        children[1].key = 1
-        children[2].key = 2
-        return children
-      }
-      const fn1 = () => {
-        const children = [new Vnode('p'), new Vnode('p'), new Vnode('p')]
-        children[0].key = 1
-        children[1].key = 2
-        children[2].key = 0
-        return children
-      }
-      //   A        A           A
-      //   |  ->   /|\    ->   /|\
-      //  (B)    B0 B1 B2    B1 B2 B0
-      const nodeA = new Component('app')
-      const nodeB = new Vfnode(fn0)
-      nodeA.addChild(nodeB)
-
-      const dnode = document.createElement('div')
-      nodeA.mount(dnode)
-      nodeA.patch()
-
-      console.log(nodeA.mounted)
-      expect(nodeA.mounted.get('0.0')).to.be.ok
-      expect(nodeA.mounted.get('1.0')).to.be.ok
-      expect(nodeA.mounted.get('1.1')).to.be.ok
-      expect(nodeA.mounted.get('1.2')).to.be.ok
-
-      const expected = '<div><p></p><p></p><p></p></div>'
-      expect(dnode.outerHTML).to.eql(expected)
-
-      const dnodeB0 = dnode.firstChild
-      const dnodeB1 = dnodeB0.nextSibling
-      const dnodeB2 = dnodeB1.nextSibling
-
-      nodeB.fn = fn1
-      const patcher = nodeA.patcher
-      expect(patcher.nodeA).to.eql(dnode)
-      patcher.patch() && patcher.next()
-      expect(patcher.nodeA).to.eql(dnodeB1)
-      patcher.patch() && patcher.next()
-      expect(patcher.nodeA).to.eql(dnodeB2)
-      patcher.patch() && patcher.next()
-      expect(patcher.nodeA).to.eql(dnodeB0)
     })
     it('patches correctly with VForNode children', () => {
       const nodeA = new Component('app')

@@ -48,13 +48,13 @@ export class Node {
 
   get firstChild () {
     /**
-     * We need to accomodate for vfnodes and the chance that they may be empty.
-     * This means that as we come across vfnodes we will compile them and 
+     * We need to accomodate for VForNodes and the chance that they may be empty.
+     * This means that as we come across VForNodes we will compile them and 
      * traverse them to find the first tnode or vnode.
      *
      */
     let node = (this.childNodes && this.childNodes.length) ? this.childNodes[0] : null
-    while (node && (node instanceof Vfnode || node instanceof VForNode)) {
+    while (node && (node instanceof VForNode)) {
       const child = node.firstChild
       if (!child) {
         node = node.nextSibling
@@ -67,7 +67,7 @@ export class Node {
 
   // set nextSibling (sibling) {
   //   // TODO: I am not yet sure if we need to do the same as above to check for
-  //   // empty vfnodes...
+  //   // empty VForNodes...
   // }
 
   get scope () {
@@ -121,7 +121,7 @@ export class Node {
 
 export class Component extends Node {
   /**
-   * A Component is a node, which is responsible for managing Vnodes, Vfnodes
+   * A Component is a node, which is responsible for managing Vnodes
    * and Components
    */
   attributes = []
@@ -174,44 +174,6 @@ export class Tnode extends Node {
   _newInstance() {
     return new Tnode(this._text)
   }
-}
-
-export class Vfnode extends Node {
-  /**
-   * We expect the children of a vfnode are probably vnodes. We are not
-   * expecting nested vfnodes. If this is something that exists, then you should
-   * consider combining the vfnodes into a single function.
-   */
-  constructor (fn = noop) {
-    super()
-    this.fn = fn
-  }
-  get childNodes () {
-    // We expect fn() to return an array of unconnected childNodes
-    const childNodes = this.fn(this.scope)
-    const len = childNodes.length
-    if (!len) return childNodes
-
-    // Now we connect the childNodes
-    const join = (nodeA, nodeB) => {
-      nodeA.nextSibling = nodeB
-      nodeB.prevSibling = nodeA
-    }
-    for (let i = 0; i < len; i++) {
-      if (i == 0) {
-        childNodes[0].prevSibling = this.prevSibling
-      }
-      if (i == len - 1) {
-        childNodes[len - 1].nextSibling = this.nextSibling
-      } else {
-        join(childNodes[i], childNodes[i+1])
-      }
-      childNodes[i].parentNode = this.parentNode
-    }
-
-    return childNodes
-  }
-  set childNodes (val) {}
 }
 
 export class VForNode extends Node {
