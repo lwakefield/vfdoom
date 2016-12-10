@@ -643,6 +643,38 @@ describe('VForNode', () => {
       ['one', 'two', 'three', 'four']
     )
   })
+  it('handles reordering of keyed nodes', () => {
+    const nodeA = new VForNode('msg of msgs')
+    const nodeB = new Vnode('p')
+    nodeB.key = sandbox(() => msg.id) // eslint-disable-line no-undef
+
+    nodeA.childNodes = nodeB
+    nodeA.scope = {msgs: [
+      {id: 1, text: 'one'},
+      {id: 2, text: 'two'},
+      {id: 3, text: 'three'},
+    ]}
+
+    const childNodes = nodeA.childNodes
+    expect(childNodes[0]._props.msg.text).to.eql('one')
+    expect(childNodes[1]._props.msg.text).to.eql('two')
+    expect(childNodes[2]._props.msg.text).to.eql('three')
+
+    nodeA.scope = {msgs: [
+      {id: 2, text: 'two'},
+      {id: 1, text: 'one'},
+      {id: 3, text: 'three'},
+    ]}
+
+    const childNodes1 = nodeA.childNodes
+    expect(childNodes1[0]._props.msg.text).to.eql('two')
+    expect(childNodes1[1]._props.msg.text).to.eql('one')
+    expect(childNodes1[2]._props.msg.text).to.eql('three')
+
+    expect(childNodes[0]).to.eql(childNodes1[1])
+    expect(childNodes[1]).to.eql(childNodes1[0])
+    expect(childNodes[2]).to.eql(childNodes1[2])
+  })
 })
 
 describe('iota', () => {
