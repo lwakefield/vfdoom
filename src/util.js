@@ -41,6 +41,23 @@ export function observe (obj, fn) {
   return p
 }
 
+export function proxy (ontoObj, val) {
+  if (!val) return
+
+  for (let key of Object.keys(val)) {
+    Object.defineProperty(ontoObj, key, {
+      enumerable: true,
+      configurable: true,
+      get () {
+        return val[key]
+      },
+      set (newVal) {
+        val[key] = newVal
+      },
+    })
+  }
+}
+
 export const isTNode = node => node.type === 'Tnode'
 export const isVNode = node => node.type === 'Vnode'
 export const isVForNode = node => node.type === 'VForNode'

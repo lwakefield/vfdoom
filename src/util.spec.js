@@ -2,7 +2,14 @@
 import {expect} from 'chai'
 
 import {
-  objGet, observe, isTNode, isVNode, isVForNode, isComponent, isIota,
+  objGet,
+  observe,
+  proxy,
+  isTNode,
+  isVNode,
+  isVForNode,
+  isComponent,
+  isIota,
 } from './util'
 import Tnode from './tnode'
 import Vnode from './vnode'
@@ -37,6 +44,25 @@ describe('observe', () => {
     expect(set).to.be.eql(1)
     data.foo.bar = 'hello'
     expect(set).to.be.eql(2)
+  })
+})
+
+describe.only('proxy', () => {
+  it('correctly proxies properties', () => {
+    let data = {
+      foo: { bar: { baz: 'hello' } },
+      qux: 'world',
+    }
+    let obj = {}
+    proxy(obj, data)
+    expect(obj.foo).to.eql(data.foo)
+    expect(obj.qux).to.eql(data.qux)
+
+    data.foo.bar.baz = 'world'
+    expect(obj.foo).to.eql(data.foo)
+
+    obj.foo.bar.baz = 'hello'
+    expect(data.foo.bar.baz).to.eql('hello')
   })
 })
 
