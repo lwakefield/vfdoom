@@ -13,6 +13,29 @@ export function objGet(obj, path) {
   }, obj)
 }
 
+class Traverser {
+  constructor (root) {
+    this.stack = [root]
+  }
+  next () {
+    if (!this.stack.length) return null
+
+    const node = this.stack.pop()
+
+    const children = node.childNodes
+    let len = children.length
+    while (len--) {
+      this.stack.push(children[len])
+    }
+
+    return node
+  }
+}
+
+export function traverse(root) {
+  return new Traverser(root)
+}
+
 export class Node {
   childNodes = []
   parentNode = null
@@ -21,6 +44,7 @@ export class Node {
   mounted = null
 
   constructor () {
+    // TODO: should this be an underscored var?
     this.args = arguments
   }
 

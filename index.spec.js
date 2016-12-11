@@ -11,6 +11,7 @@ import {
   Patcher,
   sandbox,
   objGet,
+  traverse,
 } from './index.js'
 
 function treeFromStr (str) {
@@ -51,6 +52,29 @@ function normalizeHTML (html) {
   .filter(v => !!v)
   .join('')
 }
+
+describe.only('traverse', () => {
+  it('functions correctly', () => {
+    const nodeA = new Node()
+    const nodeB = new Node()
+    const nodeC = new Node()
+    const nodeD = new Node()
+    const nodeE = new Node()
+    nodeA.addChild(nodeB)
+    nodeB.addChild(nodeC)
+    nodeB.addChild(nodeD)
+    nodeA.addChild(nodeE)
+
+    const traverser = traverse(nodeA)
+    expect(traverser.next()).to.eql(nodeA)
+    expect(traverser.next()).to.eql(nodeB)
+    expect(traverser.next()).to.eql(nodeC)
+    expect(traverser.next()).to.eql(nodeD)
+    expect(traverser.next()).to.eql(nodeE)
+    expect(traverser.next()).to.eql(null)
+    expect(traverser.next()).to.eql(null)
+  })
+})
 
 describe('Node', () => {
   it('adds a single child', () => {
@@ -96,6 +120,7 @@ describe('Node', () => {
       expect(nodeB instanceof Vnode).to.eql(true)
       expect(nodeB.tagName).to.eql('h1')
     })
+    // TODO: test cloning with child nodes
   })
 })
 
