@@ -38,5 +38,48 @@ describe('Node', () => {
       const nodeB = nodeA.clone()
       expect(nodeA === nodeB).to.eql(false)
     })
+    it.only('can clone trees', () => {
+      const [
+        nodeA,
+        nodeB,
+        nodeC,
+        nodeD,
+        nodeE,
+      ] = [
+        new Node(),
+        new Node(),
+        new Node(),
+        new Node(),
+        new Node(),
+      ]
+      nodeA.addChild(nodeB)
+      nodeB.addChild(nodeC)
+      nodeB.addChild(nodeD)
+      nodeA.addChild(nodeE)
+
+      const cloned = nodeA.clone()
+      expect(cloned).to.be.ok
+      expect(cloned === nodeA).to.be.false
+      expect(cloned.firstChild === nodeB).to.be.false
+      expect(cloned.firstChild.firstChild).is.ok
+      expect(cloned.firstChild.firstChild === nodeC).to.be.false
+      expect(cloned.firstChild.firstChild.nextSibling).is.ok
+      expect(cloned.firstChild.firstChild.nextSibling === nodeD).to.be.false
+      expect(cloned.firstChild.nextSibling).is.ok
+      expect(cloned.firstChild.nextSibling === nodeE).to.be.false
+    })
+    it('sub classes can be cloned', () => {
+      class Foo extends Node {
+        constructor (bar) {
+          super(...arguments)
+          this.bar = bar
+        }
+      }
+      const nodeA = new Foo('one')
+      expect(Array.from(nodeA.args)).to.eql(['one'])
+      const nodeB = nodeA.clone()
+      expect(nodeA === nodeB).to.eql(false)
+      expect(nodeB.bar).to.eql('one')
+    })
   })
 })
