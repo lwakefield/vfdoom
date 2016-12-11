@@ -23,10 +23,8 @@ class Traverser {
     const node = this.stack.pop()
 
     const children = node.childNodes
-    let len = children.length
-    while (len--) {
-      this.stack.push(children[len])
-    }
+    children.reverse()
+    this.stack.push(...children)
 
     return node
   }

@@ -53,7 +53,7 @@ function normalizeHTML (html) {
   .join('')
 }
 
-describe.only('traverse', () => {
+describe('traverse', () => {
   it('functions correctly', () => {
     const nodeA = new Node()
     const nodeB = new Node()
