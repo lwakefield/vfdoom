@@ -586,40 +586,6 @@ describe('Patcher', () => {
   })
 })
 
-describe('sandbox', () => {
-  const fn = function () {
-    return 'hello world'
-  }
-  it('initializes correctly', () => {
-    const sandboxed = sandbox(fn)
-    expect(sandboxed).to.be.ok
-  })
-  it('works correctly', () => {
-    const sandboxed = sandbox(fn)
-    expect(sandboxed()).to.eql('hello world')
-  })
-  it('works correctly with scope', () => {
-    const fn = function () {
-      // eslint-disable-next-line no-undef
-      return msg
-    }
-    const scope = {msg: 'hello world'}
-    const sandboxed = sandbox(fn)
-    expect(sandboxed(scope)).to.eql('hello world')
-    scope.msg = 'hello again world'
-    expect(sandboxed(scope)).to.eql('hello again world')
-  })
-})
-
-describe('objGet', () => {
-  it('works correctly', () => {
-    expect(objGet({foo: 'one'}, 'foo')).to.eql('one')
-    expect(objGet({foo: {bar: 'two'}}, 'foo.bar')).to.eql('two')
-    expect(objGet({foo: {bar: {baz: 'three'}}}, 'foo.bar.baz')).to.eql('three')
-    expect(objGet({foo: {bar: {baz: 'three'}}}, 'foo.boo.baz')).to.eql(null)
-  })
-})
-
 describe('VForNode', () => {
   it('instantiates correctly', () => {
     const node = new VForNode('foo of bar')

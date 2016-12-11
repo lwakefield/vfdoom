@@ -1,0 +1,12 @@
+ecmaVersion: 6
+extends: standard
+parser: babel-eslint
+rules:
+    #2 is error
+    indent: [2, 2]
+    arrow-parens: [2, 'as-needed']
+    semi: [1, 'never']
+    comma-dangle: [1, 'always-multiline']
+    max-len: [1, 80]
+plugins:
+    - class-property
