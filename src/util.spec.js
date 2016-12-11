@@ -47,7 +47,7 @@ describe('observe', () => {
   })
 })
 
-describe.only('proxy', () => {
+describe('proxy', () => {
   it('correctly proxies properties', () => {
     let data = {
       foo: { bar: { baz: 'hello' } },
