@@ -87,90 +87,15 @@ describe('traverse', () => {
   })
 })
 
-describe('Node', () => {
-  it('adds a single child', () => {
-    const nodeA = new Node()
-    const nodeB = new Node()
-    nodeA.addChild(nodeB)
-
-    expect(nodeA.firstChild).to.eql(nodeB)
-    expect(nodeA.childNodes[0]).to.eql(nodeB)
-    expect(nodeB.parentNode).to.eql(nodeA)
-  })
-
-  it('adds two childNodes', () => {
-    const nodeA = new Node()
-    const nodeB = new Node()
-    const nodeC = new Node()
-    nodeA.addChild(nodeB)
-    nodeA.addChild(nodeC)
-
-    expect(nodeA.firstChild).to.eql(nodeB)
-    expect(nodeA.childNodes[0]).to.eql(nodeB)
-    expect(nodeB.parentNode).to.eql(nodeA)
-
-    expect(nodeA.firstChild.nextSibling).to.eql(nodeC)
-    expect(nodeA.childNodes[1]).to.eql(nodeC)
-    expect(nodeB.nextSibling).to.eql(nodeC)
-    expect(nodeC.parentNode).to.eql(nodeA)
-    expect(nodeC.prevSibling).to.eql(nodeB)
-  })
-
-  describe('clone', () => {
-    it('can be cloned', () => {
-      const nodeA = new Node('one', 'two', 'three')
-      expect(Array.from(nodeA.args)).to.eql(['one', 'two', 'three'])
-      const nodeB = nodeA.clone()
-      expect(nodeA === nodeB).to.eql(false)
-    })
-    it('sub classes can be cloned', () => {
-      const nodeA = new Vnode('h1')
-      expect(Array.from(nodeA.args)).to.eql(['h1'])
-      const nodeB = nodeA.clone()
-      expect(nodeA === nodeB).to.eql(false)
-      expect(nodeB instanceof Vnode).to.eql(true)
-      expect(nodeB.tagName).to.eql('h1')
-    })
-    // TODO: test cloning with child nodes
-  })
+it('sub classes can be cloned', () => {
+  const nodeA = new Vnode('h1')
+  expect(Array.from(nodeA.args)).to.eql(['h1'])
+  const nodeB = nodeA.clone()
+  expect(nodeA === nodeB).to.eql(false)
+  expect(nodeB instanceof Vnode).to.eql(true)
+  expect(nodeB.tagName).to.eql('h1')
 })
 
-describe('Vnode', () => {
-  it('instatiates', () => {
-    const vnode = new Vnode('div')
-
-    expect(vnode).to.be.ok
-    expect(vnode.tagName).to.eql('div')
-  })
-})
-
-describe('Tnode', () => {
-  it('instantiates', () => {
-    expect(new Tnode()).to.be.ok
-  })
-  it('has static text', () => {
-    const tnode = new Tnode('lorem ipsum')
-    expect(tnode.text).to.eql('lorem ipsum')
-  })
-  it('has functional text', () => {
-    const tnode = new Tnode(() => 'lorem ipsum')
-    expect(tnode.text).to.eql('lorem ipsum')
-  })
-  it('has functional text with scope', () => {
-    // eslint-disable-next-line no-undef
-    const tnode = new Tnode(sandbox(() => m))
-    tnode.scope = {m: 'lorem ipsum'}
-    expect(tnode.text).to.eql('lorem ipsum')
-  })
-  it('inherits scope from parent', () => {
-    const parent = new Vnode()
-    parent.scope = {m: 'lorem ipsum'}
-    // eslint-disable-next-line no-undef
-    const tnode = new Tnode(sandbox(() => m))
-    parent.addChild(tnode)
-    expect(tnode.text).to.eql('lorem ipsum')
-  })
-})
 
 describe('treeFromStr', () => {
   it('builds a simple tree', () => {

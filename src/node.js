@@ -1,6 +1,3 @@
-import Component from './component'
-import Vnode from './vnode'
-
 export default class Node {
   childNodes = []
   parentNode = null
@@ -48,7 +45,7 @@ export default class Node {
      */
     let node = (this.childNodes && this.childNodes.length)
       ? this.childNodes[0] : null
-    while (node && (node instanceof VForNode)) {
+    while (node && (node.type === 'VForNode')) {
       const child = node.firstChild
       if (!child) {
         node = node.nextSibling
@@ -64,6 +61,10 @@ export default class Node {
   //   for
   //   // empty VForNodes...
   // }
+
+  get type () {
+    return this.constructor.name
+  }
 
   get scope () {
     /**
@@ -102,13 +103,17 @@ export default class Node {
     }
     return inst
   }
+  isMounted () {
+    return !!this._mounted
+  }
   get mounted () {
     if (!this._mounted) {
-      if (this instanceof Tnode) {
+      const type = this.type
+      if (type === 'Tnode') {
         this._mounted = document.createTextNode(this.text)
-      } else if (this instanceof Vnode) {
+      } else if (type === 'Vnode') {
         this._mounted = document.createElement(this.tagName)
-      } else if (this instanceof Component) {
+      } else if (type === 'Component' || type === 'Iota') {
         this._mounted = document.createElement(this.tagName)
       } else {
         throw new Error('cannot create dom node for: ', this)

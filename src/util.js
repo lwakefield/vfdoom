@@ -1,5 +1,4 @@
 /* eslint-env browser */
-// import Tnode from './tnode'
 
 export function objGet (obj, path) {
   const keys = path.split('.')
@@ -42,10 +41,16 @@ export function observe (obj, fn) {
   return p
 }
 
-// export function nodeTypeMismatch (a, b) {
-//   // TODO: double check these cases, should they be true!?
-//   if (!a || !b) return false
-//   if (a instanceof Text && !(b instanceof Tnode)) return true
-//   if (!a.tagName || !b.tagName) return false
-//   return a.tagName.toLowerCase() !== b.tagName.toLowerCase()
-// }
+export const isTNode = node => node.type === 'Tnode'
+export const isVNode = node => node.type === 'Vnode'
+export const isVForNode = node => node.type === 'VForNode'
+export const isIota = node => node.type === 'Iota'
+export const isComponent = node => node.type === 'Component' || isIota(node)
+
+export function nodeTypeMismatch (a, b) {
+  // TODO: double check these cases, should they be true!?
+  if (!a || !b) return false
+  if (a instanceof Text && !(isTNode(b))) return true
+  if (!a.tagName || !b.tagName) return false
+  return a.tagName.toLowerCase() !== b.tagName.toLowerCase()
+}

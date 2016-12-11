@@ -1,3 +1,6 @@
+import {
+  nodeTypeMismatch, isTNode, isComponent,
+} from './util'
 export default class Patcher {
   /**
    * Both next() and patch() are integral to the patching process. next() is
@@ -27,10 +30,10 @@ export default class Patcher {
       mounted = nodeA
     }
 
-    if (nodeB instanceof Tnode) {
+    if (isTNode(nodeB)) {
       mounted.textContent = nodeB.text
       return true
-    } else if (nodeB instanceof Component && nodeB !== this.component) {
+    } else if (isComponent(nodeB) && nodeB !== this.component) {
       if (!nodeB.el) nodeB.mount(nodeA)
       nodeB.patch()
       return true
@@ -56,8 +59,8 @@ export default class Patcher {
   next () {
     // TODO: nullify the nodes when hasNextNode is false?
     let hasNextNode = false
-    const isTnode = this.nodeB instanceof Tnode
-    const isChildComponent = this.nodeB instanceof Component &&
+    const isTnode = isTNode(this.nodeB)
+    const isChildComponent = isComponent(this.nodeB) &&
       this.nodeB !== this.component
     const isLeaf = isTnode || isChildComponent
     if (isLeaf) {

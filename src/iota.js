@@ -1,7 +1,7 @@
 import Component from './component'
 import {observe} from './util'
 
-export class Iota extends Component {
+export default class Iota extends Component {
   $methods = {}
   constructor (el) {
     super(...arguments)

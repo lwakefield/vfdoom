@@ -1,7 +1,7 @@
 import Node from './vnode'
 import {objGet} from './util'
 
-export class VForNode extends Node {
+export default class VForNode extends Node {
   _blueprint = null
   _childNodes = new Map()
   constructor (expression, keyedWith = null) {

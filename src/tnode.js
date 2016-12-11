@@ -1,6 +1,6 @@
 import Node from './node'
 
-export class Tnode extends Node {
+export default class Tnode extends Node {
   constructor (text) {
     super(...arguments)
     this._text = text

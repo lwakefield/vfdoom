@@ -1,7 +1,14 @@
 /* eslint-env mocha */
 import {expect} from 'chai'
 
-import {objGet, observe} from './util'
+import {
+  objGet, observe, isTNode, isVNode, isVForNode, isComponent, isIota,
+} from './util'
+import Tnode from './tnode'
+import Vnode from './vnode'
+import VForNode from './vfornode'
+import Component from './component'
+import Iota from './iota'
 
 describe('objGet', () => {
   it('works correctly', () => {
@@ -30,5 +37,24 @@ describe('observe', () => {
     expect(set).to.be.eql(1)
     data.foo.bar = 'hello'
     expect(set).to.be.eql(2)
+  })
+})
+
+describe('identifies types', () => {
+  it('isTNode works correctly', () => {
+    expect(isTNode(new Tnode())).to.be.true
+  })
+  it('isVNode works correctly', () => {
+    expect(isVNode(new Vnode())).to.be.true
+  })
+  it('isVForNode works correctly', () => {
+    expect(isVForNode(new VForNode('m of msgs'))).to.be.true
+  })
+  it('isComponent works correctly', () => {
+    expect(isComponent(new Component())).to.be.true
+    expect(isComponent(new Iota())).to.be.true
+  })
+  it('isIota works correctly', () => {
+    expect(isIota(new Iota())).to.be.true
   })
 })
