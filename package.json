@@ -4,12 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --compilers js:babel-core/register --require jsdom-global/register",
-    "test-all": "npm run test -- tests/**/*.js src/**/*_spec.js",
-    "test-unit": "npm run test -- src/**/*_spec.js",
-    "cover": "nyc --reporter=lcov --require babel-core/register mocha *.spec.js",
-    "dev": "webpack-dev-server --hot",
-    "build": "webpack -p"
+    "test": "mocha src/**/*.spec.js",
+    "cover": "nyc mocha src/**/*.spec.js"
   },
   "author": "Lawrence Wakefield <lawrence@iamlawrence.me> (https://iamlawrence.me/)",
   "devDependencies": {
@@ -27,7 +23,6 @@
     "jsdom": "^9.4.1",
     "jsdom-global": "2.0.0",
     "mocha": "^2.5.3",
-    "nyc": "^9.0.1",
-    "webpack": "^1.13.1"
+    "nyc": "^9.0.1"
   }
 }
