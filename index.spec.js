@@ -12,7 +12,18 @@ import {
   sandbox,
   objGet,
   traverse,
+  Iota,
 } from './index.js'
+
+let window
+let document
+beforeEach(() => {
+  window = jsdom.jsdom().defaultView
+  document = window.document
+  global['window'] = window
+  global['document'] = document
+  global['Text'] = window.Text
+})
 
 function treeFromStr (str) {
   const relations = str.split('\n').map(v => v.trim()).filter(v => !!v)
@@ -192,15 +203,6 @@ describe('treeFromStr', () => {
 })
 
 describe('Patcher', () => {
-  let window
-  let document
-  beforeEach(() => {
-    window = jsdom.jsdom().defaultView
-    document = window.document
-    global['window'] = window
-    global['document'] = document
-    global['Text'] = window.Text
-  })
   describe('next()', () => {
     // it('iterates correctly', () => {
     //   //     A
@@ -243,7 +245,7 @@ describe('Patcher', () => {
       //   B   E
       //  / \
       // C   D
-      const nodeA = new Component('app')
+      const nodeA = new Component()
       const [
         nodeB,
         nodeC,
@@ -310,7 +312,7 @@ describe('Patcher', () => {
       //   B   E
       //  / \
       // C   D
-      const nodeA = new Component('app')
+      const nodeA = new Component()
       const [
         nodeB,
         nodeC,
@@ -368,7 +370,7 @@ describe('Patcher', () => {
       //     A          A
       // ┌─┬─┼─┬─┐ -> ┌─┼─┐
       // B C D E F    B C D
-      const nodeA = new Component('app')
+      const nodeA = new Component()
       const [
         nodeB,
         nodeC,
@@ -405,7 +407,7 @@ describe('Patcher', () => {
       //   B   E
       //  / \
       // C   D
-      const nodeA = new Component('app')
+      const nodeA = new Component()
       const [
         nodeB,
         nodeC,
@@ -450,7 +452,7 @@ describe('Patcher', () => {
       //   B   E
       //  / \
       // C   D
-      const nodeA = new Component('app')
+      const nodeA = new Component()
       const nodeB = new Vnode('p')
       const nodeC = new Vnode('hr')
       const nodeD = new Tnode('hello world')
@@ -476,12 +478,12 @@ describe('Patcher', () => {
       // C   F
       // |   |
       // D   G
-      const nodeA = new Component('app')
+      const nodeA = new Component()
       const nodeB = new Vnode('section')
       const nodeC = new Vnode('h1')
       const nodeD = new Tnode('hello world')
 
-      const nodeE = new Component('foo')
+      const nodeE = new Component()
       const nodeF = new Vnode('p')
       const nodeG = new Tnode('lorem ipsum')
 
@@ -518,7 +520,7 @@ describe('Patcher', () => {
       `))
     })
     it('patches correctly with VForNode children', () => {
-      const nodeA = new Component('app')
+      const nodeA = new Component()
       nodeA._scope.msgs = ['one', 'two', 'three']
       const nodeB = new VForNode('msg in msgs')
       const nodeC = new Vnode('p')
@@ -720,32 +722,26 @@ describe('VForNode', () => {
 })
 
 describe('iota', () => {
-  it('does simple interpolation', () => {
-    // const cases = `
-    //   <a href=\${linkto}>Foo</a>
+  it('builds a simple app', () => {
+    const el = document.createElement('div')
+    const iota = new Iota(el)
 
-    //   <p>\${msg}</p>
+    const nodeB = new VForNode('msg in msgs')
+    const nodeC = new Vnode('p')
+    // eslint-disable-next-line no-undef
+    const nodeD = new Tnode(sandbox(() => `${$index} - ${msg}`))
+    iota.addChild(nodeB)
+    nodeB.childNodes = nodeC
+    nodeC.addChild(nodeD)
 
-    //   <li i-for="m of msgs">\${m}</li>
-    // `
-    // const data = {
-    //   linkto: 'https://url.com',
-    //   msg: 'hello world',
-    //   msgs: ['one', 'two', 'three'],
-    // }
-    // // const nodeA = 
+    iota.$data.msgs = ['one', 'two', 'three']
+    expect(el.outerHTML).to.eql(
+      '<div><p>0 - one</p><p>1 - two</p><p>2 - three</p></div>'
+    )
 
-    // // for i-for we want to create a template/blueprint and then we probably
-    // // want to cache the instances. Any interpolations that happen inside of the
-    // // looped el, we want to make sure they have access to all of the parent
-    // // scope.
-
-    // // We also want to propagate scope correctly.
-    // // In the following, <p> should have access to `m` as you would expect.
-    // //   <li i-for="m of msgs"><p>${m}</p></li>
-    // // While the foo component does not have access to m
-    // //   <div i-for="m of msgs"><foo /></div>
-    // // Unless we explicitly pass it through...
-    // //   <div i-for="m of msgs"><foo m="m"/></div>
+    iota.$data.msgs = ['three', 'one', 'two']
+    expect(el.outerHTML).to.eql(
+      '<div><p>0 - three</p><p>1 - one</p><p>2 - two</p></div>'
+    )
   })
 })

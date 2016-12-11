@@ -2,10 +2,45 @@ const noop = () => {}
 const newEl = (tagName) => document.createElement(tagName)
 const nodeTypeMismatch = (a, b) => {
   if (!a || !b) return false
-  if (a instanceof Text && b instanceof Tnode) return true
+  if (a instanceof Text && !(b instanceof Tnode)) return true
   if (!a.tagName || !b.tagName) return false
   return a.tagName.toLowerCase() !== b.tagName.toLowerCase()
 }
+
+/**
+ * observe recursively mutates an Object and makes it reactive
+ * If a property is set on an Object (that is known), fn will be called
+ * If a property is set to an Object, we will observe that as well
+ *
+ * We can't observe things we don't know about.
+ * obj = {foo: 1}
+ * observe(obj, alert.bind('a change has been made!'))
+ * // This will not be observed...
+ * obj.bar = 2;
+ */
+export default function observe(obj, fn = nop) {
+  let p = new Proxy(obj, {
+    set (target, property, val) {
+      target[property] = val instanceof Object
+        ? observe(val, fn)
+        : val;
+      // Do the notification!
+      fn();
+      return true;
+    }
+  });
+
+  // When doing the initial observation, we wish to observe all properties which
+  // are objects as well
+  for (let key of Object.keys(obj)) {
+    if (obj[key] instanceof Object) {
+      obj[key] = observe(obj[key], fn);
+    }
+  }
+
+  return p;
+}
+
 export function objGet(obj, path) {
   const keys = path.split('.')
   return keys.reduce((curr, key) => {
@@ -100,11 +135,8 @@ export class Node {
      * Scope is passed downstream. Props can be thought of as isolated scoped
      * variables that have been explicitly passed in.
      */
-    if (!this._scope) {
-      // Fetch the scope from upstream and cache the reference.
-      this._scope = this.parentNode ? this.parentNode.scope : null
-    }
-    return Object.assign({}, this._props, this._scope)
+    const parentScope = this.parentNode ? this.parentNode.scope : {}
+    return Object.assign({}, this._props, this._scope, parentScope)
   }
   set scope (val) {
     this._scope = val
@@ -158,12 +190,11 @@ export class Component extends Node {
    * and Components
    */
   attributes = []
+  scope = {}
   patcher = null
-  constructor (componentName, tagName='div') {
+  constructor (tagName='div') {
     super(...arguments)
-    this.componentName = componentName
     this.tagName = tagName
-    this.scope = {}
   }
   recycle (node) {
     if (!node.parentNode) return
@@ -176,6 +207,21 @@ export class Component extends Node {
   patch () {
     this.patcher.reset()
     while (this.patcher.patch() && this.patcher.next());
+  }
+}
+
+export class Iota extends Component {
+  $methods = {}
+  constructor (el) {
+    super(...arguments)
+    this.mount(el)
+    this.$data = observe({}, () => this.patch())
+  }
+  get scope () {
+    return Object.assign({}, this.$data, this.$methods, super.scope)
+  }
+  set scope (val) {
+    super.scope = val
   }
 }
 
@@ -314,12 +360,12 @@ export class Patcher {
       component.recycle(nodeA)
       nodeA = mounted
     } else if (!mounted) {
-      component.mounted.set(mountKey, nodeA)
+      nodeB.mounted = nodeA
       mounted = nodeA
     }
 
     if (nodeB instanceof Tnode) {
-      nodeA.textContent = nodeB.text
+      mounted.textContent = nodeB.text
       return true
     } else if (nodeB instanceof Component && nodeB !== this.component) {
       if (!nodeB.el) nodeB.mount(nodeA)
