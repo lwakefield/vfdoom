@@ -38,7 +38,7 @@ describe('Node', () => {
       const nodeB = nodeA.clone()
       expect(nodeA === nodeB).to.eql(false)
     })
-    it.only('can clone trees', () => {
+    it('can clone trees', () => {
       const [
         nodeA,
         nodeB,
