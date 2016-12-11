@@ -8,6 +8,7 @@ import Tnode from './tnode'
 import VForNode from './vfornode'
 import Component from './component'
 import sandbox from './sandbox'
+import VAttribute from './vattribute'
 
 beforeEach(() => {
   const window = jsdom.jsdom().defaultView
@@ -337,6 +338,23 @@ describe('Patcher', () => {
       vnode.attributes = [
         {name: 'id', value: 'foo'},
         {name: 'class', value: 'one two three'},
+      ]
+      const dnode = document.createElement('div')
+      const patcher = new Patcher()
+
+      patcher._patchAttrs(dnode, vnode)
+      const html = dnode.outerHTML
+      expect(html).to.eql('<div id="foo" class="one two three"></div>')
+    })
+    it('patches with dynamic attrs', () => {
+      const vnode = new Vnode('div')
+      vnode.scope = {className: 'one two three'}
+      // eslint-disable-next-line no-undef
+      const vattr = new VAttribute('class', sandbox(() => className))
+      vattr.parentNode = vnode
+      vnode.attributes = [
+        {name: 'id', value: 'foo'},
+        vattr,
       ]
       const dnode = document.createElement('div')
       const patcher = new Patcher()
