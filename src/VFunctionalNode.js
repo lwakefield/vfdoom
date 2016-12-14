@@ -1,6 +1,6 @@
 import Node from './vnode'
 
-export class VFunctionalNode extends Node {
+export default class VFunctionalNode extends Node {
   mountedNodes = new Map()
   constructor (...fns) {
     super(...arguments)
@@ -9,9 +9,13 @@ export class VFunctionalNode extends Node {
   get childNodes () {
     if (!this._blueprint) return []
 
-    let propsForChildren = this.scope
+    // Given a bunch of functions, we expect to reduce the scope to a list of
+    // props which we will use to render the childNodes. We need to make sure
+    // that on each function we pass in an object containing both the scope and
+    // props as we don't know what the function is expecting.
+    let propsForChildren = {}
     for (const fn of this.fns) {
-      propsForChildren = fn(propsForChildren)
+      propsForChildren = fn(Object.assign({}, this.scope, propsForChildren))
     }
 
     const hasKey = !!this._blueprint.key
@@ -28,6 +32,7 @@ export class VFunctionalNode extends Node {
       }
 
       child.props = props
+      return child
     })
 
     this._linkChildren(children)
