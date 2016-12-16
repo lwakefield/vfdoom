@@ -61,9 +61,7 @@ export function proxy (ontoObj, val) {
 
 export const isTNode = node => node.type === 'Tnode'
 export const isVNode = node => node.type === 'Vnode'
-export const isVForNode = node => node.type === 'VForNode'
-export const isVIfNode = node => node.type === 'VIfNode'
-export const isFunctionalNode = node => isVForNode(node) || isVIfNode(node)
+export const isFunctionalNode = node => node.type === 'VFunctionalNode'
 export const isIota = node => node.type === 'Iota'
 export const isComponent = node => node.type === 'Component' || isIota(node)
 

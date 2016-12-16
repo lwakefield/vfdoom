@@ -66,7 +66,7 @@ export default class VFunctionalNode extends Node {
   addChild (child) {
     if (this._childNodes.length > 0) {
       throw new Error(
-        'A VForNode may only have a single child'
+        'A VFunctionalNode may only have a single child'
       )
     }
     child.parentNode = this

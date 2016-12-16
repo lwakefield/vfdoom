@@ -49,9 +49,9 @@ export default class Node {
 
   get firstChild () {
     /**
-     * We need to accomodate for VForNodes and the chance that they may be
+     * We need to accomodate for VFunctionalNodes and the chance that they may be
      * empty.
-     * This means that as we come across VForNodes we will compile them and
+     * This means that as we come across VFunctionalNodes we will compile them and
      * traverse them to find the first tnode or vnode.
      *
      */
@@ -69,9 +69,7 @@ export default class Node {
   }
 
   // set nextSibling (sibling) {
-  //   // TODO: I am not yet sure if we need to do the same as above to check
-  //   for
-  //   // empty VForNodes...
+  //   // TODO: I am not yet sure if we need to do the same as above
   // }
 
   get type () {

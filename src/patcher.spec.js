@@ -6,8 +6,6 @@ import {
   Vnode,
   Tnode,
   Component,
-  VForNode,
-  VIfNode,
 } from './nodes'
 import sandbox from './sandbox'
 import VAttribute from './vattribute'
@@ -313,60 +311,6 @@ describe('Patcher', () => {
           </div>
         </div>
       `))
-    })
-
-    it('patches correctly with VForNode children', () => {
-      const nodeA = new Component()
-      nodeA._scope.msgs = ['one', 'two', 'three']
-      const nodeB = new VForNode('msg in msgs')
-      const nodeC = new Vnode('p')
-      // eslint-disable-next-line no-undef
-      const nodeD = new Tnode(sandbox(() => `${$index} - ${msg}`))
-      nodeA.addChild(nodeB)
-      nodeB.addChild(nodeC)
-      nodeC.addChild(nodeD)
-
-      const dnode = document.createElement('div')
-      nodeA.mount(dnode)
-      nodeA.patch()
-      expect(dnode.outerHTML).to.eql(
-        '<div><p>0 - one</p><p>1 - two</p><p>2 - three</p></div>'
-      )
-    })
-
-    it('patches correctly with VIf nested in VFor children', () => {
-      const nodeA = new Component()
-      nodeA._scope.msgs = [
-        {show: true, text: 'one'},
-        {show: false, text: 'two'},
-        {show: true, text: 'three'},
-      ]
-      const nodeB = new VForNode('msg in msgs')
-      const nodeC = new VIfNode('msg.show')
-      const nodeD = new Vnode('p')
-      // eslint-disable-next-line no-undef
-      const nodeE = new Tnode(sandbox(() => `${$index} - ${msg.text}`))
-      nodeA.addChild(nodeB)
-      nodeB.addChild(nodeC)
-      nodeC.addChild(nodeD)
-      nodeD.addChild(nodeE)
-
-      /**
-       * SOMETHING IS PROBABLY HAPPENING WHEN YOU TRY TO CLONE A VFORNODE WITH A
-       * VIFNODE CHILD
-       */
-
-      /**
-       * MAYBE SOMETHING TO DO WITH PARENT NODE
-       */
-
-      const dnode = document.createElement('div')
-      nodeA.mount(dnode)
-      nodeA.patch()
-      console.log(dnode.outerHTML)
-      // expect(dnode.outerHTML).to.eql(
-      //   '<div><p>0 - one</p><p>1 - two</p><p>2 - three</p></div>'
-      // )
     })
   })
 
