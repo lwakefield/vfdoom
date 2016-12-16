@@ -1,3 +1,5 @@
+import {isFunctionalNode} from './util'
+
 export default class Node {
   childNodes = []
   parentNode = null
@@ -10,10 +12,20 @@ export default class Node {
     this.args = arguments
   }
 
+  get childNodes () {
+    return this._childNodes
+  }
+
+  set childNodes (val) {
+    this._childNodes = val
+  }
+
   addChild (child) {
     this.childNodes.push(child)
     child.parentNode = this
 
+    // TODO try and cache references to childNodes because they might contain
+    // getters
     const len = this.childNodes.length
     if (len < 2) return
 
@@ -45,7 +57,7 @@ export default class Node {
      */
     let node = (this.childNodes && this.childNodes.length)
       ? this.childNodes[0] : null
-    while (node && (node.type === 'VForNode')) {
+    while (node && isFunctionalNode(node)) {
       const child = node.firstChild
       if (!child) {
         node = node.nextSibling
@@ -96,7 +108,8 @@ export default class Node {
      */
     const inst = new this.constructor(...this.args)
 
-    let child = this.firstChild
+    let child = this._childNodes && this._childNodes.length
+      ? this._childNodes[0] : null
     while (child) {
       inst.addChild(child.clone())
       child = child.nextSibling
@@ -116,7 +129,7 @@ export default class Node {
       } else if (type === 'Component' || type === 'Iota') {
         this._mounted = document.createElement(this.tagName)
       } else {
-        throw new Error('cannot create dom node for: ', this)
+        throw new Error(`cannot create dom node for: ${type}`)
       }
     }
     return this._mounted

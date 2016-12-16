@@ -26,7 +26,7 @@ describe('iota', () => {
     // eslint-disable-next-line no-undef
     const nodeD = new Tnode(sandbox(() => `${$index} - ${msg}`))
     iota.addChild(nodeB)
-    nodeB.childNodes = nodeC
+    nodeB.addChild(nodeC)
     nodeC.addChild(nodeD)
 
     iota.$data.msgs = ['one', 'two', 'three']

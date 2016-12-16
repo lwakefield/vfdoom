@@ -59,7 +59,7 @@ describe('VFunctionalNode', () => {
     const childNodes1 = nodeA.childNodes
     expect(childNodes1[0]).is.not.ok
   })
-  it.only('creates children correctly as an for with a nested if', () => {
+  it('creates children correctly as an for with a nested if', () => {
     const nodeA = new VFunctionalNode(
       /* eslint-disable no-undef */
       sandbox(() => ({msgs: msgs.filter(m => m.show)})),

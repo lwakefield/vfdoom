@@ -1,6 +1,7 @@
 /* eslint-env browser */
 
 export function objGet (obj, path) {
+  if (!obj) return null
   const keys = path.split('.')
   return keys.reduce((curr, key) => {
     return curr != null && key in curr ? curr[key] : null
@@ -61,6 +62,8 @@ export function proxy (ontoObj, val) {
 export const isTNode = node => node.type === 'Tnode'
 export const isVNode = node => node.type === 'Vnode'
 export const isVForNode = node => node.type === 'VForNode'
+export const isVIfNode = node => node.type === 'VIfNode'
+export const isFunctionalNode = node => isVForNode(node) || isVIfNode(node)
 export const isIota = node => node.type === 'Iota'
 export const isComponent = node => node.type === 'Component' || isIota(node)
 

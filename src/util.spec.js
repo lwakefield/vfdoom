@@ -7,15 +7,20 @@ import {
   proxy,
   isTNode,
   isVNode,
+  isVIfNode,
   isVForNode,
   isComponent,
   isIota,
 } from './util'
-import Tnode from './tnode'
-import Vnode from './vnode'
-import VForNode from './vfornode'
-import Component from './component'
-import Iota from './iota'
+
+import {
+  Vnode,
+  Tnode,
+  Component,
+  Iota,
+  VForNode,
+  VIfNode,
+} from './nodes'
 
 describe('objGet', () => {
   it('works correctly', () => {
@@ -75,6 +80,9 @@ describe('identifies types', () => {
   })
   it('isVForNode works correctly', () => {
     expect(isVForNode(new VForNode('m of msgs'))).to.be.true
+  })
+  it('isVIfNode works correctly', () => {
+    expect(isVIfNode(new VIfNode('foo'))).to.be.true
   })
   it('isComponent works correctly', () => {
     expect(isComponent(new Component())).to.be.true
