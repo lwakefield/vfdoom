@@ -43,7 +43,7 @@ describe('VFunctionalNode', () => {
     expect(childNodes1[1]).to.eql(childNodes[1])
     expect(childNodes1[2]).to.eql(childNodes[2])
   })
-  it.only('handles attributes correctly as a for', () => {
+  it('handles attributes correctly as a for', () => {
     const nodeA = new VFunctionalNode(
       // eslint-disable-next-line no-undef
       sandbox(() => msgs.map(m => ({m})))
