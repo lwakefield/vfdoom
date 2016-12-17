@@ -4,6 +4,7 @@ import VFunctionalNode from './VFunctionalNode'
 import Vnode from './vnode'
 import Tnode from './tnode'
 import sandbox from './sandbox'
+import VAttribute from './vattribute'
 
 describe('VFunctionalNode', () => {
   it('instantiates correctly', () => {
@@ -41,6 +42,34 @@ describe('VFunctionalNode', () => {
     expect(childNodes1[0]).to.eql(childNodes[0])
     expect(childNodes1[1]).to.eql(childNodes[1])
     expect(childNodes1[2]).to.eql(childNodes[2])
+  })
+  it.only('handles attributes correctly as a for', () => {
+    const nodeA = new VFunctionalNode(
+      // eslint-disable-next-line no-undef
+      sandbox(() => msgs.map(m => ({m})))
+    )
+    const nodeB = new Vnode('p')
+    const attr = new VAttribute(
+      'class',
+      // eslint-disable-next-line no-undef
+      sandbox(() => `msg-${m.id}`),
+    )
+    nodeB.addAttribute(attr)
+
+    nodeA.addChild(nodeB)
+    nodeA.scope = {msgs: [
+      {id: 1},
+      {id: 2},
+      {id: 3},
+    ]}
+
+    const [child1, child2, child3] = nodeA.childNodes
+    expect(child1.attributes[0].name).to.eql('class')
+    expect(child1.attributes[0].value).to.eql('msg-1')
+    expect(child2.attributes[0].name).to.eql('class')
+    expect(child2.attributes[0].value).to.eql('msg-2')
+    expect(child3.attributes[0].name).to.eql('class')
+    expect(child3.attributes[0].value).to.eql('msg-3')
   })
   it('creates children correctly as an if', () => {
     const nodeA = new VFunctionalNode(
