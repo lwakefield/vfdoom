@@ -1,10 +1,12 @@
 /* eslint-env mocha */
+/* globals Event */
 import {expect} from 'chai'
 import VFunctionalNode from './VFunctionalNode'
 import Vnode from './vnode'
 import Tnode from './tnode'
 import sandbox from './sandbox'
 import VAttribute from './vattribute'
+import EventListener from './EventListener'
 
 describe('VFunctionalNode', () => {
   it('instantiates correctly', () => {
@@ -70,6 +72,44 @@ describe('VFunctionalNode', () => {
     expect(child2.attributes[0].value).to.eql('msg-2')
     expect(child3.attributes[0].name).to.eql('class')
     expect(child3.attributes[0].value).to.eql('msg-3')
+  })
+  it.only('handles eventListeners correctly as a for', () => {
+    const nodeA = new VFunctionalNode(
+      // eslint-disable-next-line no-undef
+      sandbox(() => msgs.map(m => ({m})))
+    )
+
+    const nodeB = new Vnode('p')
+    const listener = new EventListener('click', function ($event) {
+      this.calls.push($event)
+    })
+    nodeB.addEventListener(listener)
+
+    nodeA.addChild(nodeB)
+    nodeA.scope = {msgs: ['one', 'two', 'three'], calls: []}
+
+    const [listenerA, listenerB, listenerC] = nodeA.childNodes
+      .map(v => v.eventListeners[0])
+    const [dnodeA, dnodeB, dnodeC] = [
+      document.createElement('button'),
+      document.createElement('button'),
+      document.createElement('button'),
+    ]
+    listenerA.attachTo(dnodeA)
+    listenerB.attachTo(dnodeB)
+    listenerC.attachTo(dnodeC)
+
+    dnodeA.dispatchEvent(new Event('click'))
+    expect(nodeA.scope.calls.length).to.eql(1)
+    dnodeB.dispatchEvent(new Event('click'))
+    expect(nodeA.scope.calls.length).to.eql(2)
+    dnodeC.dispatchEvent(new Event('click'))
+    expect(nodeA.scope.calls.length).to.eql(3)
+
+    const calls = nodeA.scope.calls
+    expect(calls[0].target).to.eql(dnodeA)
+    expect(calls[1].target).to.eql(dnodeB)
+    expect(calls[2].target).to.eql(dnodeC)
   })
   it('creates children correctly as an if', () => {
     const nodeA = new VFunctionalNode(

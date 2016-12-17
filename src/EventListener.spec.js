@@ -4,7 +4,6 @@ import {expect} from 'chai'
 import jsdom from 'jsdom'
 
 import EventListener from './EventListener'
-import sandbox from './sandbox'
 
 beforeEach(() => {
   const window = jsdom.jsdom().defaultView
@@ -14,6 +13,35 @@ beforeEach(() => {
   global['Text'] = window.Text
   global['Event'] = window.Event
 })
+
+/**
+ * Our EventListener system is starting to get more specialized...
+ * We want to aim for something like this.
+ *
+ * <button @click="doSomething($event, foo, bar)" />
+ * {
+ *   data: {
+ *     myVal: 1
+ *   },
+ *   methods: {
+ *     doSomething ($event, foo, bar) {
+ *       // We expect to have full access to the scope from data and methods.
+ *       // We expect this to resolve to data.myVal
+ *       this.myVal++
+ *
+ *       // Ideally we want to avoid something like this
+ *       foo.val = 'that'
+ *     }
+ *   }
+ * }
+ *
+ * Our handler will do something like this:
+ *
+ * node.addEventListener('click', function ($event) {
+ *   handler.call(this.scope, $event, foo, bar);
+ * })
+ *
+ */
 
 describe('EventListener', () => {
   it('initializes correctly', () => {
@@ -53,6 +81,7 @@ describe('EventListener', () => {
     expect(parentNode.scope.calls.length).to.eql(1)
   })
   it.skip('handles events when attached to two nodes correctly', () => {
+    // Should this ever happen?
   })
 })
 

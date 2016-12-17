@@ -40,6 +40,7 @@ export default class Patcher {
     }
 
     this._patchAttrs(mounted, nodeB)
+    this._patchEventListeners(mounted, nodeB)
     return true
   }
   _patchAttrs (dnode, vnode) {
@@ -54,6 +55,19 @@ export default class Patcher {
     }
     for (const key of dnodeAttrs.keys()) {
       dnode.removeAttribute(key)
+    }
+  }
+  _patchEventListeners (dnode, vnode) {
+    if (!vnode.eventListeners) return
+
+    for (const listener of vnode.eventListeners) {
+      if (!listener.attachedTo) {
+        listener.attachTo(dnode)
+      } else if (listener.attachedTo !== dnode) {
+        // TODO: should this case ever occur?
+        listener.detachFrom(listener.attachedTo)
+        listener.attachTo(dnode)
+      }
     }
   }
   next () {

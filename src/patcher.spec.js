@@ -9,6 +9,7 @@ import {
 } from './nodes'
 import sandbox from './sandbox'
 import VAttribute from './vattribute'
+import EventListener from './EventListener'
 import Patcher from './patcher'
 
 beforeEach(() => {
@@ -375,6 +376,20 @@ describe('Patcher', () => {
       patcher._patchAttrs(dnode, vnode)
       const html = dnode.outerHTML
       expect(html).to.eql('<div id="foo" class="one two three"></div>')
+    })
+  })
+
+  describe('_patchEventListeners', () => {
+    it('patches from scratch', () => {
+      const vnode = new Vnode('div')
+      const listener = new EventListener()
+      vnode.addEventListener(listener)
+
+      const dnode = document.createElement('div')
+      const patcher = new Patcher()
+
+      patcher._patchEventListeners(dnode, vnode)
+      expect(listener.attachedTo).to.eql(dnode)
     })
   })
 })
