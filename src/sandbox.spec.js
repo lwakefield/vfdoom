@@ -25,5 +25,14 @@ describe('sandbox', () => {
     scope.msg = 'hello again world'
     expect(sandboxed(scope)).to.eql('hello again world')
   })
+  it('works correctly with scope and args', () => {
+    const fn = function (myFoo, myBar) {
+      // eslint-disable-next-line no-undef
+      return [msg, myFoo, myBar]
+    }
+    const scope = {msg: 'hello world'}
+    const sandboxed = sandbox(fn)
+    expect(sandboxed(scope, 'foo', 'bar')).to.eql(['hello world', 'foo', 'bar'])
+  })
 })
 
