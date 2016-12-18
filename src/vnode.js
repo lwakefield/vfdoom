@@ -5,7 +5,7 @@ export default class Vnode extends Node {
   eventListeners = []
   constructor (tagName = 'div') {
     super(...arguments)
-    this.tagName = tagName
+    this.tagName = tagName.toLowerCase()
   }
   addAttribute (attr) {
     attr.parentNode = this

@@ -17,8 +17,8 @@ beforeEach(() => {
 
 describe('iota', () => {
   it('builds a simple app', () => {
-    const el = document.createElement('div')
-    const iota = new Iota(el)
+    // const el = document.createElement('div')
+    // const iota = new Iota(el)
 
     // const nodeB = new VForNode('msg in msgs')
     // const nodeC = new Vnode('p')

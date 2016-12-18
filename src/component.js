@@ -12,7 +12,7 @@ export default class Component extends Node {
   patcher = null
   constructor (tagName = 'div') {
     super(...arguments)
-    this.tagName = tagName
+    this.tagName = tagName.toLowerCase()
   }
   recycle (node) {
     if (!node.parentNode) return
