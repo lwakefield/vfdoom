@@ -54,7 +54,7 @@ describe('EventListener', () => {
   })
   it('handles event correctly', () => {
     const e = new EventListener('click', function ($event) {
-      this.calls.push(arguments)
+      calls.push(arguments)
     })
     const parentNode = {scope: {calls: []}}
     e.parentNode = parentNode
@@ -67,7 +67,7 @@ describe('EventListener', () => {
   })
   it('detaches correctly', () => {
     const e = new EventListener('click', function ($event) {
-      this.calls.push(arguments)
+      calls.push(arguments)
     })
     const parentNode = {scope: {calls: []}}
     e.parentNode = parentNode

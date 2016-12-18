@@ -1,6 +1,7 @@
 import Node from './node'
 import Patcher from './patcher'
 
+// TODO test cloning
 export default class Component extends Node {
   /**
    * A Component is a node, which is responsible for managing Vnodes

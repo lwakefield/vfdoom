@@ -73,20 +73,23 @@ describe('VFunctionalNode', () => {
     expect(child3.attributes[0].name).to.eql('class')
     expect(child3.attributes[0].value).to.eql('msg-3')
   })
-  it.only('handles eventListeners correctly as a for', () => {
+  it('handles eventListeners correctly as a for', () => {
+    const root = new Vnode()
     const nodeA = new VFunctionalNode(
       // eslint-disable-next-line no-undef
       sandbox(() => msgs.map(m => ({m})))
     )
 
     const nodeB = new Vnode('p')
-    const listener = new EventListener('click', function ($event) {
-      this.calls.push($event)
+    const listener = new EventListener('click', $event => {
+      // eslint-disable-next-line no-undef
+      calls.push($event)
     })
     nodeB.addEventListener(listener)
 
+    root.addChild(nodeA)
     nodeA.addChild(nodeB)
-    nodeA.scope = {msgs: ['one', 'two', 'three'], calls: []}
+    root.scope = {msgs: ['one', 'two', 'three'], calls: []}
 
     const [listenerA, listenerB, listenerC] = nodeA.childNodes
       .map(v => v.eventListeners[0])
@@ -105,11 +108,6 @@ describe('VFunctionalNode', () => {
     expect(nodeA.scope.calls.length).to.eql(2)
     dnodeC.dispatchEvent(new Event('click'))
     expect(nodeA.scope.calls.length).to.eql(3)
-
-    const calls = nodeA.scope.calls
-    expect(calls[0].target).to.eql(dnodeA)
-    expect(calls[1].target).to.eql(dnodeB)
-    expect(calls[2].target).to.eql(dnodeC)
   })
   it('creates children correctly as an if', () => {
     const nodeA = new VFunctionalNode(

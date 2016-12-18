@@ -39,6 +39,11 @@ export default class VFunctionalNode extends Node {
     return children
   }
   _linkChildren (childNodes) {
+    /**
+     * TODO: make sure it is known that a VFunctionalNode *needs* a parent,
+     * otherwise resolving the parentNode of childNodes will yield null. You
+     * cannot set scope on childNodes without VFunctionalNode having a parent
+     */
     const len = childNodes.length
     // Now we connect the childNodes
     const join = (nodeA, nodeB) => {

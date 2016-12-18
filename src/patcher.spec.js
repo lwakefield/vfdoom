@@ -382,7 +382,8 @@ describe('Patcher', () => {
   describe('_patchEventListeners', () => {
     it('patches from scratch', () => {
       const vnode = new Vnode('div')
-      const listener = new EventListener()
+      const noop = () => {}
+      const listener = new EventListener('click', noop)
       vnode.addEventListener(listener)
 
       const dnode = document.createElement('div')
