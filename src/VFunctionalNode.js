@@ -1,4 +1,4 @@
-import Node from './vnode'
+import Node from './node'
 
 export default class VFunctionalNode extends Node {
   mountedNodes = new Map()
