@@ -14,8 +14,8 @@ export default function sandbox (fnOrString) {
     throw new Error('cannot create sandbox for: ', fnOrString)
   }
 
-  const fn = new Function('scope', ...args, `
-    with (scope || {}) return ${src}
-  `)
+  const fn = new Function('scope', ...args,
+    'with (scope || {}) return ' + src
+  )
   return fn
 }

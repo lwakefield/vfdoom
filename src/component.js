@@ -14,6 +14,10 @@ export default class Component extends Node {
     super(...arguments)
     this.tagName = tagName.toLowerCase()
   }
+  addAttribute (attr) {
+    attr.parentNode = this
+    this.attributes.push(attr)
+  }
   recycle (node) {
     if (!node.parentNode) return
     node.parentNode.removeChild(node)
