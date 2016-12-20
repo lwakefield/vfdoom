@@ -11,6 +11,7 @@ import sandbox from './sandbox'
 const boundAttr = /:(.+)/
 const boundEvent = /@(.+)/
 const iFor = /i-for/
+const iForVars = /(.+) of (.+)/
 const iIf = /i-if/
 const hasInterpolation = /\${.*}/
 
@@ -21,8 +22,7 @@ export default class Compiler {
   stack = []
   result = null
   constructor (el) {
-    this.result = new Component(el.tagName)
-    this.process(el, this.result)
+    this.result = this.process(el, new Component(el.tagName))
     this.stack = [[el, this.result]]
   }
   next () {
@@ -49,12 +49,20 @@ export default class Compiler {
     this.stack.push(...childNodes)
   }
   process (dnode, vnode) {
+    let ifCondition = null
+    let forVars = []
+
     for (const attr of Array.from(dnode.attributes)) {
       const name = attr.name
       const val = attr.value
+
       if (name.match(boundEvent)) {
-      } else if (name.match(iFor)) {
+        // TODO: finish this
       } else if (name.match(iIf)) {
+        ifCondition = val
+      } else if (name.match(iFor)) {
+        const [, local, loopOver] = val.match(iForVars)
+        forVars = [local, loopOver]
       } else if (name.match(boundAttr)) {
         const [, attrName] = name.match(boundAttr)
         const fn = new Function(`return ${val}`)
@@ -66,6 +74,29 @@ export default class Compiler {
         vnode.addAttribute(new VAttribute(name, val))
       }
     }
+
+    if (ifCondition || forVars.length) {
+      let fn = null
+      if (ifCondition && forVars.length) {
+        const [local, loopOver] = forVars
+        fn = new Function(`
+          return ${loopOver}.reduce((result, ${local}) => {
+            if (${ifCondition}) result.push({${local}})
+            return result
+          })
+        `)
+      } else if (forVars.length) {
+        const [local, loopOver] = forVars
+        fn = new Function(`return ${loopOver}.map(${local} => ({${local}}))`)
+      } else if (ifCondition) {
+        fn = new Function(`return ${ifCondition} ? [{}] : []`)
+      }
+      const functionalNode = new VFunctionalNode(sandbox(fn))
+      functionalNode.addChild(vnode)
+      return functionalNode
+    }
+
+    return vnode
   }
   isDone () {
     return this.stack.length === 0

@@ -117,5 +117,21 @@ describe('Compiler', () => {
     c.result.scope = {className: 'foo bar'}
     expect(attr.value).to.eql('foo bar')
   })
+  it('Compiles a node with an i-if', () => {
+    const el = document.createElement('div')
+    el.setAttribute('i-if', 'show')
+    const c = new Compiler(el)
+    while (!c.isDone()) c.next()
+
+    expect(c.result.type).to.eql('VFunctionalNode')
+    expect(c.result._childNodes.length).to.eql(1)
+    expect(c.result._childNodes[0].type).to.eql('Component')
+
+    c.result.scope = {show: true}
+    expect(c.result.childNodes.length).to.eql(1)
+
+    c.result.scope = {show: false}
+    expect(c.result.childNodes.length).to.eql(0)
+  })
 })
 
