@@ -129,8 +129,10 @@ describe('VFunctionalNode', () => {
   it('creates children correctly as an for with a nested if', () => {
     const nodeA = new VFunctionalNode(
       /* eslint-disable no-undef */
-      sandbox(() => ({msgs: msgs.filter(m => m.show)})),
-      sandbox(() => msgs.map(m => ({m})))
+      sandbox(() => msgs.reduce((result, m) => {
+        if (m.show) result.push({m})
+        return result
+      }, []))
       /* eslint-enable no-undef */
     )
     const nodeB = new Vnode('p')
