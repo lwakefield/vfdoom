@@ -12,7 +12,7 @@ beforeEach(() => {
   global['Text'] = window.Text
 })
 
-describe.only('Compiler', () => {
+describe('Compiler', () => {
   it('Compiles a single node', () => {
     const el = document.createElement('div')
     const c = new Compiler(el)
@@ -88,7 +88,7 @@ describe.only('Compiler', () => {
     expect(attr.name).to.eql('class')
     expect(attr.value).to.eql('foo')
   })
-  it('Adds a dynamic attribute to a node', () => {
+  it('Adds an interpolated attribute to a node', () => {
     const el = document.createElement('div')
     el.setAttribute('class', 'foo ${bar}')
     const c = new Compiler(el)
@@ -102,6 +102,20 @@ describe.only('Compiler', () => {
 
     c.result.scope = {bar: 'hello'}
     expect(attr.value).to.eql('foo hello')
+  })
+  it('Adds a bound attribute to a node', () => {
+    const el = document.createElement('div')
+    el.setAttribute(':class', 'className')
+    const c = new Compiler(el)
+    while (!c.isDone()) c.next()
+
+    expect(c.result.type).to.eql('Component')
+    expect(c.result._childNodes.length).to.eql(0)
+    expect(c.result.attributes.length).to.eql(1)
+    const attr = c.result.attributes[0]
+    expect(attr.name).to.eql('class')
+    c.result.scope = {className: 'foo bar'}
+    expect(attr.value).to.eql('foo bar')
   })
 })
 

@@ -56,7 +56,9 @@ export default class Compiler {
       } else if (name.match(iFor)) {
       } else if (name.match(iIf)) {
       } else if (name.match(boundAttr)) {
-        // vnode.addAttribute(new VAttribute(name, sandbox(val)))
+        const [, attrName] = name.match(boundAttr)
+        const fn = new Function(`return ${val}`)
+        vnode.addAttribute(new VAttribute(attrName, sandbox(fn)))
       } else if (val.match(hasInterpolation)) {
         const fn = new Function('return `' + val + '`')
         vnode.addAttribute(new VAttribute(name, sandbox(fn)))
