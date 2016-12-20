@@ -62,7 +62,7 @@ export default class Compiler {
         ifCondition = val
       } else if (name.match(iFor)) {
         const [, local, loopOver] = val.match(iForVars)
-        forVars = [local, loopOver]
+        forVars = [local.trim(), loopOver.trim()]
       } else if (name.match(boundAttr)) {
         const [, attrName] = name.match(boundAttr)
         const fn = new Function(`return ${val}`)
