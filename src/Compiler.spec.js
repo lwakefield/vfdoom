@@ -149,5 +149,22 @@ describe('Compiler', () => {
     c.result.scope = {msgs: ['one', 'two', 'three', 'four']}
     expect(c.result.childNodes.length).to.eql(4)
   })
+  it('Compiles a node with an i-for and i-if', () => {
+    const el = document.createElement('div')
+    el.setAttribute('i-for', 'm of msgs')
+    el.setAttribute('i-if', 'm.show')
+    const c = new Compiler(el)
+    while (!c.isDone()) c.next()
+
+    expect(c.result.type).to.eql('VFunctionalNode')
+    expect(c.result._childNodes.length).to.eql(1)
+    expect(c.result._childNodes[0].type).to.eql('Component')
+
+    c.result.scope = {msgs: [{show: true}, {show: true}, {show: true}]}
+    expect(c.result.childNodes.length).to.eql(3)
+
+    c.result.scope = {msgs: [{show: true}, {show: false}, {show: true}]}
+    expect(c.result.childNodes.length).to.eql(2)
+  })
 })
 

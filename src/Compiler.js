@@ -83,7 +83,7 @@ export default class Compiler {
           return ${loopOver}.reduce((result, ${local}) => {
             if (${ifCondition}) result.push({${local}})
             return result
-          })
+          }, [])
         `)
       } else if (forVars.length) {
         const [local, loopOver] = forVars
