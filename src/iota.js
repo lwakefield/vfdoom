@@ -1,12 +1,17 @@
 import Component from './component'
 import {observe, proxy} from './util'
+import {compile} from './Compiler'
 
 export default class Iota extends Component {
   $methods = {}
-  $data = observe({}, () => this.patch())
+  $data = observe({}, () => this.patcher && this.patch())
   constructor (el, options = {}) {
-    super(...arguments)
-    this.mount(el)
+    super(el.tagName, ...arguments)
+
+    const root = compile(el)
+    for (const child of root.childNodes) {
+      this.addChild(child)
+    }
 
     const data = options.data
     if (data) {
@@ -16,6 +21,9 @@ export default class Iota extends Component {
 
     proxy(this, this.$data)
     proxy(this, this.$methods)
+
+    this.mount(el)
+    this.patch()
   }
   get scope () {
     return Object.assign({}, this.$data, this.$methods, super.scope)

@@ -68,9 +68,19 @@ export default class Node {
     return node
   }
 
-  // set nextSibling (sibling) {
-  //   // TODO: I am not yet sure if we need to do the same as above
-  // }
+  set nextSibling (sibling) {
+    this._nextSibling = sibling
+  }
+
+  get nextSibling () {
+    let next = this._nextSibling
+    if (isFunctionalNode(next)) {
+      const child = next.firstChild
+      if (child) return child
+      return next.nextSibling
+    }
+    return next
+  }
 
   get type () {
     return this.constructor.name

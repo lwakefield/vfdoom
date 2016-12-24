@@ -1,5 +1,5 @@
 import {
-  nodeTypeMismatch, isTNode, isComponent,
+  nodeTypeMismatch, isTNode, isComponent, isFunctionalNode,
 } from './util'
 export default class Patcher {
   /**

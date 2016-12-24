@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha src/**/*.spec.js",
-    "cover": "nyc mocha src/**/*.spec.js"
+    "cover": "nyc mocha src/**/*.spec.js",
+    "build-lib": "webpack index.js dist.js --module-bind 'js=babel-loader' --output-library Iota",
+    "build": "webpack src/iota.js dist.js --module-bind 'js=babel-loader'"
   },
   "author": "Lawrence Wakefield <lawrence@iamlawrence.me> (https://iamlawrence.me/)",
   "devDependencies": {
@@ -13,6 +15,7 @@
     "babel-core": "^6.10.4",
     "babel-loader": "^6.2.4",
     "babel-plugin-resolver": "^1.1.0",
+    "babel-plugin-transform-class-properties": "^6.19.0",
     "babel-plugin-transform-es2015-modules-amd": "^6.8.0",
     "babel-plugin-transform-es2015-modules-umd": "^6.8.0",
     "babel-polyfill": "^6.9.1",
