@@ -120,7 +120,7 @@ export default class Node {
       ? this._childNodes[0] : null
     while (child) {
       inst.addChild(child.clone())
-      child = child.nextSibling
+      child = child._nextSibling
     }
     return inst
   }

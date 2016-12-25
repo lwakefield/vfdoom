@@ -22,25 +22,45 @@ export function objGet (obj, path) {
 export function observe (obj, fn) {
   let p = new Proxy(obj, {
     set (target, property, val) {
-      target[property] = val instanceof Object
+      target[property] = val instanceof Array || val instanceof Object
         ? observe(val, fn)
-        : val
-      // Do the notification!
-      if (fn) fn()
-      return true
-    },
-  })
-
-  // When doing the initial observation, we wish to observe all properties which
-  // are objects as well
-  for (let key of Object.keys(obj)) {
-    if (obj[key] instanceof Object) {
-      obj[key] = observe(obj[key], fn)
+        : val;
+      notify(fn, val);
+      return true;
     }
-  }
-
-  return p
+  });
+  return p;
 }
+
+function notify (fn, val) {
+  if (!(val instanceof Array) && val instanceof Object) {
+    observe(val, fn);
+  }
+  fn();
+}
+
+// export function observe (obj, fn) {
+//   let p = new Proxy(obj, {
+//     set (target, property, val) {
+//       target[property] = val instanceof Object
+//         ? observe(val, fn)
+//         : val
+//       // Do the notification!
+//       if (fn) fn()
+//       return true
+//     },
+//   })
+
+//   // When doing the initial observation, we wish to observe all properties which
+//   // are objects as well
+//   for (let key of Object.keys(obj)) {
+//     if (typeof obj[key] === 'object') {
+//       obj[key] = observe(obj[key], fn)
+//     }
+//   }
+
+//   return p
+// }
 
 export function proxy (ontoObj, val) {
   if (!val) return

@@ -1,5 +1,7 @@
 import Node from './node'
 
+// TODO: text cloning of nested VFunctionalNodes
+
 export default class VFunctionalNode extends Node {
   mountedNodes = new Map()
   constructor (fn) {
@@ -9,7 +11,7 @@ export default class VFunctionalNode extends Node {
   get childNodes () {
     if (!this._blueprint) return []
 
-    const propsForChildren = this.fn(this.scope)
+    const propsForChildren = this.fn(this.scope, this.props)
 
     const hasKey = !!this._blueprint.key
     const children = propsForChildren.map((v, k) => {

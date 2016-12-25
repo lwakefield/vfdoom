@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="description" content="dbmon vue" />
+<title>dbmon (Iota)</title>
+</head>
+<body>
+  <div id="app">
+    <table class="table table-striped lastest-data">
+      <tbody>
+        <tr i-for="db of databases">
+          <td class="dbname">${db.dbname}</td>
+          <td class="query-count">
+            <span class="${db.lastSample.countClassName}">${db.lastSample.nbQueries}</span>
+          </td>
+          <td i-for="q of db.lastSample.topFiveQueries" class="${q.elapsedClassName}">
+            ${q.formatElapsed}
+            <div class="popover left">
+              <div class="popover-content">${q.query}</div>
+              <div class="arrow"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script src="./dist.js"></script>
+  <script src="./env.js"></script>
+  <script src="./memory-stats.js"></script>
+  <script src="./monitor.js"></script>
+
+  <link rel="stylesheet" href="./style.css" type="text/css">
+
+  <script type="text/javascript" charset="utf-8">
+      const app = new Iota(document.querySelector('#app'), {
+        data: {
+            databases: []
+        }
+    })
+    function loadSamples () {
+        app.databases = ENV.generateData().toArray();
+        Monitoring.renderRate.ping();
+        setTimeout(loadSamples, 0);
+    }
+    loadSamples();
+  </script>
+</body>
+</html>
