@@ -7,6 +7,9 @@ export default class Node {
   nextSibling = null
   mounted = null
 
+  props = null
+  scope = null
+
   constructor () {
     // TODO: should this be an underscored var?
     this.args = arguments
@@ -57,7 +60,7 @@ export default class Node {
      */
     let node = (this.childNodes && this.childNodes.length)
       ? this.childNodes[0] : null
-    while (node && isFunctionalNode(node)) {
+    while (node && node.isFunctionalNode) {
       const child = node.firstChild
       if (!child) {
         node = node.nextSibling
@@ -74,7 +77,7 @@ export default class Node {
 
   get nextSibling () {
     let next = this._nextSibling
-    if (isFunctionalNode(next)) {
+    if (next && next.isFunctionalNode) {
       const child = next.firstChild
       if (child) return child
       return next.nextSibling
@@ -87,21 +90,28 @@ export default class Node {
   }
 
   get scope () {
+    // TODO: cache this call somehow...
+    // We don't want to have to reassign every time as it is expensive.
     /**
      * Scope is passed downstream. Props can be thought of as isolated scoped
      * variables that have been explicitly passed in.
      */
+    if (!this._props && !this._scope) {
+      return this.parentNode.scope
+    }
+
     const parentScope = this.parentNode ? this.parentNode.scope : {}
-    return Object.assign({}, this._props, this._scope, parentScope)
+    return {
+      ...this._props,
+      ...this._scope,
+      ...parentScope,
+    }
   }
   set scope (val) {
     this._scope = val
   }
 
   get props () {
-    if (!this._props) {
-      this._props = {}
-    }
     return this._props
   }
 

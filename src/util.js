@@ -24,19 +24,19 @@ export function observe (obj, fn) {
     set (target, property, val) {
       target[property] = val instanceof Array || val instanceof Object
         ? observe(val, fn)
-        : val;
-      notify(fn, val);
-      return true;
+        : val
+      notify(fn, val)
+      return true
     }
-  });
-  return p;
+  })
+  return p
 }
 
 function notify (fn, val) {
   if (!(val instanceof Array) && val instanceof Object) {
-    observe(val, fn);
+    observe(val, fn)
   }
-  fn();
+  fn()
 }
 
 // export function observe (obj, fn) {

@@ -93,11 +93,20 @@ export default class Compiler {
     if (condition && forVars.length) {
       const [local, loopOver] = forVars
       fn = new Function(`
-        return ${loopOver}.reduce((result, ${local}) => {
-          if (${condition}) result.push({${local}})
-          return result
-        }, [])
+         const result = []
+         const len = ${loopOver}.length
+         for (let i = 0; i < len; i++) {
+           const ${local} = ${loopOver}[i]
+           if (${condition}) result.push(${local})
+         }
+         return result
       `)
+      // fn = new Function(`
+      //   return ${loopOver}.reduce((result, ${local}) => {
+      //     if (${condition}) result.push({${local}})
+      //     return result
+      //   }, [])
+      // `)
     } else if (forVars.length) {
       const [local, loopOver] = forVars
       fn = new Function(`return ${loopOver}.map(${local} => ({${local}}))`)

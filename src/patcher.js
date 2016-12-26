@@ -1,3 +1,4 @@
+import {Tnode, Component} from './nodes'
 import {
   nodeTypeMismatch, isTNode, isComponent, isFunctionalNode,
 } from './util'
@@ -43,17 +44,24 @@ export default class Patcher {
     this._patchEventListeners(mounted, nodeB)
     return true
   }
+  static getAttrsFromDnode (dnode) {
+    return Array.from(dnode.attributes)
+  }
   _patchAttrs (dnode, vnode) {
-    const dnodeAttrs = new Map()
-    for (const attr of Array.from(dnode.attributes)) {
-      dnodeAttrs.set(attr.name, true)
+    const dnodeAttrs = {}
+    for (const attr of Patcher.getAttrsFromDnode(dnode)) {
+      dnodeAttrs[attr.name] = attr.value
     }
+
     const vnodeAttrs = vnode.attributes || []
     for (const attr of vnodeAttrs) {
-      dnode.setAttribute(attr.name, attr.value)
-      dnodeAttrs.delete(attr.name)
+      if (attr.value !== dnodeAttrs[attr.name]) {
+        dnode.setAttribute(attr.name, attr.value)
+      }
+      delete dnodeAttrs[attr.name]
     }
-    for (const key of dnodeAttrs.keys()) {
+
+    for (const key of Object.keys(dnodeAttrs)) {
       dnode.removeAttribute(key)
     }
   }
@@ -73,13 +81,14 @@ export default class Patcher {
   next () {
     // TODO: nullify the nodes when hasNextNode is false?
     let hasNextNode = false
-    const isTnode = isTNode(this.nodeB)
-    const isChildComponent = isComponent(this.nodeB) &&
+    const isTnode = this.nodeB.nodeType === 3
+    const isChildComponent = this.nodeB instanceof Component &&
       this.nodeB !== this.component
     const isLeaf = isTnode || isChildComponent
+
     if (isLeaf) {
       hasNextNode = this._upAndAcross()
-    } else if (this.nodeB.firstChild) {
+    } else if (this.nodeB.firstChild) { // TODO: this firstChild call can be optimized
       hasNextNode = this._downAndLeft()
     } else {
       hasNextNode = this._upAndAcross()
@@ -94,7 +103,13 @@ export default class Patcher {
     // TODO: a lot of the logic over the next ~8 lines looks pretty similar to
     // that of _upAndAcross, would be nice to refactor it somehow...
     const nextNodeA = this.nodeA.firstChild
-    const mismatch = nodeTypeMismatch(nextNodeA, this.nodeB)
+    const [a, b] = [this.nodeA, this.nodeB]
+    const mismatch = (a.nodeType !== b.nodeType) ||
+      (
+        a && b && a.tagName && b.tagName &&
+        a.tagName.toLowerCase() !== b.tagName.toLowerCase()
+      )
+
     const liveNodeA = this.nodeB.mounted
     if (!nextNodeA) {
       this.nodeA.appendChild(liveNodeA)
@@ -114,7 +129,13 @@ export default class Patcher {
 
     this.nodeB = this.nodeB.nextSibling
     const nextNodeA = this.nodeA.nextSibling
-    const mismatch = nodeTypeMismatch(nextNodeA, this.nodeB)
+    const [a, b] = [this.nodeA, this.nodeB]
+    const mismatch = (a.nodeType !== b.nodeType) ||
+      (
+        a && b && a.tagName && b.tagName &&
+        a.tagName.toLowerCase() !== b.tagName.toLowerCase
+      )
+
     const liveNodeA = this.nodeB.mounted
     if (!nextNodeA) {
       this.nodeA.parentNode.appendChild(liveNodeA)

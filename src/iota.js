@@ -4,7 +4,8 @@ import {compile} from './Compiler'
 
 export default class Iota extends Component {
   $methods = {}
-  $data = observe({}, () => this.patcher && this.patch())
+  _patch = () => this.patcher && this.patch()
+  $data = observe({}, this._patch)
   constructor (el, options = {}) {
     super(el.tagName, ...arguments)
 

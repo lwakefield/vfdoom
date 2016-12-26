@@ -1,6 +1,7 @@
 import Node from './node'
 
 export default class Tnode extends Node {
+  static nodeType = 3
   constructor (text) {
     super(...arguments)
     this._text = text

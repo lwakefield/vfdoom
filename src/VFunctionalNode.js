@@ -4,6 +4,7 @@ import Node from './node'
 
 export default class VFunctionalNode extends Node {
   mountedNodes = new Map()
+  isFunctionalNode = true
   constructor (fn) {
     super(...arguments)
     this.fn = fn
@@ -14,10 +15,13 @@ export default class VFunctionalNode extends Node {
     const propsForChildren = this.fn(this.scope, this.props)
 
     const hasKey = !!this._blueprint.key
-    const children = propsForChildren.map((v, k) => {
-      const props = Object.assign({$index: k}, v)
+    const children = []
+    const len = propsForChildren.length
+    for (let $index = 0; $index < len; $index++) {
+      const prop = propsForChildren[$index]
+      const props = Object.assign({$index}, prop)
       const scope = Object.assign({}, this.scope, props)
-      const key = hasKey ? this._blueprint.key(scope) : k
+      const key = hasKey ? this._blueprint.key(scope) : $index
 
       let child = this.mountedNodes.get(key)
 
@@ -27,8 +31,24 @@ export default class VFunctionalNode extends Node {
       }
 
       child.props = props
-      return child
-    })
+      children.push(child)
+    }
+
+    // const children = propsForChildren.map((v, k) => {
+    //   const props = Object.assign({$index: k}, v)
+    //   const scope = Object.assign({}, this.scope, props)
+    //   const key = hasKey ? this._blueprint.key(scope) : k
+
+    //   let child = this.mountedNodes.get(key)
+
+    //   if (!child) {
+    //     child = this._blueprint.clone()
+    //     this.mountedNodes.set(key, child)
+    //   }
+
+    //   child.props = props
+    //   return child
+    // })
 
     this._linkChildren(children)
     return children
